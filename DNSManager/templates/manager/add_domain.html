@@ -10,12 +10,6 @@
 <div class="row">
     <div class="col-sm-12">
         <h4>Details</h4>
-        ml:
-        {% for field in domain %}
-            <div class="fieldWrapper">
-                {{ field.label_tag }}
-                {{ field.errors }}
-            </div>
         {% endfor %}
         <form class="form-horizontal" action="{% url "add_domain" %}" method="post">
             {% csrf_token %}
