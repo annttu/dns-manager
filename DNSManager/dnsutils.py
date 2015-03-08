@@ -162,9 +162,9 @@ def do_resolve(key, type, server):
     try:
         r = dns.resolver.Resolver(configure=False)
         r.nameservers = server
-        responses = r.query(qname=key, rdtype=type, raise_on_no_answer=False)
+        responses = r.query(qname=key, rdtype=type)
         out = []
-        if responses:
+        if responses is not None:
             for response in responses:
                out.append(response.to_text())
         return out
