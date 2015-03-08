@@ -36,6 +36,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'manager',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -48,9 +49,9 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'DNSManager.urls'
+ROOT_URLCONF = 'manager.urls'
 
-WSGI_APPLICATION = 'DNSManager.wsgi.application'
+WSGI_APPLICATION = 'manager.wsgi.application'
 
 
 # Database
@@ -66,6 +67,10 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
+TEMPLATE_DIRS = (
+    "templates",
+)
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
