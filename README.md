@@ -4,10 +4,24 @@ DynDNS updater
 DynDNS updater to update records using tsig key.
 
 
+Installation
+============
+
+Install packages etc.
+
+    virtualenv env --python=python3.4
+    . env/bin/activate
+    pip install -r requirements.txt
+    cd DNSManager
+    vi manager/settings.py
+    ./manage.py syncdb
+    
+
+
 Usage
 =====
 
-TODO :)
+    ./manage.py runserver
 
 License
 =======

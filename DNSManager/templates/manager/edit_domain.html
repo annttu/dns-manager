@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block content %}
+        <div class="row">
+<div class="span-12">
+    <h1>Domain {{domain.name}}</h1>
+</div>
+<div>
+    <p></p><a href="{% url "index" %}">&larr; Back</a></p>
+</div>
+
+<div class="row">
+    <div class="col-sm-12">
+        <h4>Edit domain</h4>
+        <form class="form-horizontal" action="{% url "edit_domain" domain.name %}" method="POST">
+        {% csrf_token %}
+            <div class="form-group">
+            <label class="col-sm-2 control-label">Name</label>
+            <div class="col-sm-10">
+              <p class="form-control-static">{{ domain.name }}</p>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="comment" class="col-sm-2 control-label">Comment</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" id="comment" value="{{ domain.comment}}" placeholder="Comment">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="master" class="col-sm-2 control-label">Master server</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" value="{{ domain.master }}" id="master" placeholder="ns1.example.com">
+            </div>
+          </div>
+           <div class="form-group">
+            <label for="master" class="col-sm-2 control-label">TSIG key</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" value="{{ domain.tsig_key }}" id="tsig_key" placeholder="example.com. IN ...">
+            </div>
+            </div>
+            <div class="form-group">
+                <label for="master" class="col-sm-2 control-label">TSIG key algorithm</label>
+                <div class="col-sm-10">
+                    <select class="form-control">
+                        {% for type, name in key_types %}
+                        <option value="{{type}}">{{ name }}</option>
+                        {% endfor %}
+                      </select>
+                </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-default">Save</button>
+              </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-12">
+        <h4>
+            Dynamic clients
+        </h4>
+        <table class="table table-condensed">
+            <tr>
+            <th>
+                Name
+            </th>
+            <th>
+                Actions
+            </th>
+        </tr>
+        {% for client in domain.client_set.all %}
+            <tr>
+                <td>
+                    <a href="{% url "edit_dyndns" client.pk %}">{{ client.fqdn }}</a>
+                </td>
+                <td>
+                    <a href="{% url "edit_dyndns" client.pk %}">edit</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </table>
+        {% if not domain.client_set.all %}
+        <p>No clients yet, add one!</p>
+        {% endif %}
+        <a href="{% url "add_dyndns" domain.name %}">Add new</a>
+    </div>
+</div>
+
+{% endblock %}

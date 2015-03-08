@@ -1,12 +1,22 @@
 <!DOCTYPE HTML>
+{% load staticfiles %}
 <html lang="en">
 <head>
     <title>DNS manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <link rel="stylesheet" href="/static/css/style.css" type="text/css" media="Screen">
+    <link rel="stylesheet" href="{% static "css/style.css" %}" type="text/css" media="Screen">
+    <link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}" type="text/css" media="Screen">
 </head>
 <body>
-<div id="container">
+<div class="container">
+{% if messages %}
+<div class="row">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} {% if message.tags == "error" %}alert-danger{% endif %}" role="alert">{{ message }}</div>
+        {% endfor %}
+</div>
+{% endif %}
 {% block content %}
 {% endblock %}
 </div>

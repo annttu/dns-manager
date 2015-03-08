@@ -68,6 +68,11 @@ DATABASES = {
     }
 }
 
+STATICFILES_DIRS  = (
+    os.path.join(BASE_DIR, 'static/'),
+)
+
+
 TEMPLATE_DIRS = (
     "templates",
 )

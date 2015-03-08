@@ -1,4 +1,40 @@
 {% extends 'base.html' %}
 {% block content %}
-<p>Nothing to see here!</p>
+        <div class="row">
+<div class="span-12">
+    <h1>DNS manager!</h1>
+</div>
+</div>
+
+<div class="row">
+    <h2>
+        Domains
+    </h2>
+    {% if domains %}
+    <table class="table table-condensed">
+        <tr>
+            <th>
+                Name
+            </th>
+            <th>
+                Actions
+            </th>
+        </tr>
+    {% for domain in domains %}
+        <tr>
+            <td>
+                <a href="{% url "edit_domain" domain.name %}">{{ domain.name }}</a>
+            </td>
+            <td>
+                <a href="{% url "edit_domain" domain.name %}">edit</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </table>
+    {% else %}
+    <p>No domains, add one!</p>
+    {% endif %}
+    <p><a href="{% url "add_domain" %}">Add domain</a></p>
+</div>
+
 {% endblock %}

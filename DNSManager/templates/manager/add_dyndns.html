@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+        <div class="row">
+<div class="span-12">
+    <h1>Add DynDNS client</h1>
+</div>
+<div>
+    <p></p><a href="{% url "edit_domain" domain.name %}">&larr; Back</a></p>
+</div>
+{% if secret %}
+    <div class="row">
+        <h4>New secret</h4>
+        <p>New secret for client is <b>"{{ secret }}"</b>. This secret <b>is not shown afterwards</b>.</p>
+        <p>Example update script:</p>
+        <pre>
+            curl -s {{ update_url }}
+        </pre>
+    </div>
+{% endif %}
+<div class="row">
+    <div class="col-sm-12">
+        <h4>Details</h4>
+        <form class="form-horizontal" action="{% url "add_dyndns" domain.name %}" method="post">
+            {% csrf_token %}
+            <div class="form-group {% if client.name.errors %}has-error has-feedback{% endif %}">
+            <label class="col-sm-2 control-label" for="name">Name without domain{% if client.name.errors %}, {% for error in client.name.errors %} {{ error }}{% endfor %}{% endif %}</label>
+            <div class="col-sm-10">
+                 <input type="text" class="form-control" name="name" id="name" value="{{ client.name.value }}" placeholder="Name without domain">
+
+            </div>
+          </div>
+          <div class="form-group {% if client.comment.errors %}has-error has-feedback{% endif %}">
+            <label for="comment" class="col-sm-2 control-label" for="comment">Comment{% if client.comment.errors %}, {% for error in client.comment.errors %} {{ error }}{% endfor %}{% endif %}</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="comment" id="comment" value="{{ client.comment.value }}" placeholder="Comment">
+            </div>
+          </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-default">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

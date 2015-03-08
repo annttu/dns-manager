@@ -1,6 +1,9 @@
+import socket
+from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 from django.contrib.auth.models import User
+from dnsutils import checkKey, DynDNSException
 
 from hashlib import sha512
 import string
@@ -23,6 +26,20 @@ TSIG_KEY_TYPES = (
 )
 
 
+def tsig_key_validator(value):
+    try:
+        checkKey(value)
+    except DynDNSException:
+        raise ValidationError("Invalid TSIG_KEY")
+
+
+def check_master(value):
+    try:
+        socket.gethostbyname(value)
+    except socket.gaierror:
+        raise ValueError("%s is not valid dns-server" % value)
+
+
 class Domain(models.Model):
     """
     Domain object
@@ -30,9 +47,10 @@ class Domain(models.Model):
     name = models.CharField(max_length=128, null=False, unique=True)
     comment = models.CharField(max_length=8192, null=False, default="")
     users = models.ManyToManyField(User)  # Users can do thins to Domain
-    tsig_key = models.CharField(max_length=8192, null=False)
+    tsig_key = models.CharField(max_length=8192, null=False, validators=[tsig_key_validator])
     tsig_type = models.CharField(max_length=8192, null=False, default="HMAC_MD5", choices=TSIG_KEY_TYPES)
-    master = models.CharField(max_length=8192, null=False, help_text="DNS zone master server address")
+    master = models.CharField(max_length=8192, null=False, help_text="DNS zone master server address", validators=[check_master])
+
 
     @property
     def fqdn(self):
@@ -50,6 +68,9 @@ class Client(models.Model):
     secret = models.CharField(max_length=1024, null=False)  # SHA512 hashed secret
     name = models.CharField(max_length=128, null=False)
     comment = models.CharField(max_length=8192, null=False, default="")
+
+    class Meta:
+        unique_together = ('domain', 'name',)
 
     @property
     def fqdn(self):

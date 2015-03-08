@@ -40,12 +40,14 @@ keyTypes = {
 
 
 def checkKey(key):
-    k = {key.rsplit(' ')[0]:key.rsplit(' ')[6]}
+    try:
+        k = {key.rsplit(' ')[0]:key.rsplit(' ')[6]}
+    except IndexError:
+        raise DynDNSException('%s is not a valid key. The file should be in DNS KEY record format. See dnssec-keygen(8)' % k)
     try:
         KeyRing = dns.tsigkeyring.from_text(k)
     except:
         raise DynDNSException('%s is not a valid key. The file should be in DNS KEY record format. See dnssec-keygen(8)' % k)
-    print(KeyRing)
     return KeyRing
 
 
