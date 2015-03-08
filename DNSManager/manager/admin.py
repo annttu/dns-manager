@@ -2,8 +2,6 @@ from django.contrib import admin
 from .models import *
 
 
-print("asdfasdfasdf")
-
 @admin.register(Domain)
 class DomainAdmin(admin.ModelAdmin):
     pass
