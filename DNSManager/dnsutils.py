@@ -89,10 +89,6 @@ def doUpdate(Server, key, keyAlgorithm, Origin, doPTR, Action, TTL, Type, client
     KeyRing = checkKey(key)
     # Start constructing the DDNS Query
 
-    # NOTE, due to bug in debian dnspython, keyalgorithm is set as fudge
-
-    # parse key algorihm.
-
     keyAlgorithm = getAlgorithm(keyAlgorithm)
 
     Update = dns.update.Update(Origin, keyring=KeyRing, keyalgorithm=keyAlgorithm)
@@ -142,7 +138,11 @@ def get_ipv4(address):
         res = socket.getaddrinfo(address, 80, socket.AF_INET)
     except socket.gaierror:
         return []
-    return res[0][4]
+    out = []
+    for x in res:
+        if x[4][0] not in res:
+            out.append(x[4][0])
+    return out
 
 
 def get_ipv6(address):
@@ -150,5 +150,23 @@ def get_ipv6(address):
         res = socket.getaddrinfo(address, 80, socket.AF_INET6)
     except socket.gaierror:
         return []
-    return res[0][4]
+    out = []
+    for x in res:
+        if x[4][0] not in res:
+            out.append(x[4][0])
+    return out
 
+
+def do_resolve(key, type, server):
+    server = get_ipv6(server) + get_ipv4(server)
+    try:
+        r = dns.resolver.Resolver(configure=False)
+        r.nameservers = server
+        responses = r.query(qname=key, rdtype=type, raise_on_no_answer=False)
+        out = []
+        if responses:
+            for response in responses:
+               out.append(response.to_text())
+        return out
+    except DNSException:
+        return []
