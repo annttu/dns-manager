@@ -77,6 +77,7 @@
                 </td>
                 <td>
                     <a href="{% url "edit_dyndns" client.pk %}">edit</a>
+                    <a href="{% url "delete_dyndns" client.pk %}">delete</a>
                 </td>
             </tr>
         {% endfor %}
@@ -87,5 +88,58 @@
         <a href="{% url "add_dyndns" domain.name %}">Add new</a>
     </div>
 </div>
+
+
+<div class="row">
+    <div class="col-sm-12">
+        <h4>
+            Static entries
+        </h4>
+        <table class="table table-condensed">
+            <tr>
+            <th>
+                Name
+            </th>
+            <th>
+                TTL
+            </th>
+            <th>
+                Type
+            </th>
+            <th>
+                Data
+            </th>
+            <th>
+                Actions
+            </th>
+        </tr>
+        {% for entry in static_entries %}
+            <tr>
+                <td>
+                    <a href="{% url "edit_static" entry.domain.fqdn entry.pk %}">{{ entry.fqdn }}</a>
+                </td>
+                <td>
+                    {{ entry.ttl }}
+                </td>
+                <td>
+                    {{ entry.type }}
+                </td>
+                <td>
+                    {{ entry.data }}
+                </td>
+                <td>
+                    <a href="{% url "edit_static" entry.domain.fqdn entry.pk %}">edit</a>
+                    <a href="{% url "delete_static" entry.domain.fqdn entry.pk %}">delete</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </table>
+        {% if not domain.client_set.all %}
+        <p>No clients yet, add one!</p>
+        {% endif %}
+        <a href="{% url "add_static" domain.name %}">Add new</a>
+    </div>
+</div>
+
 
 {% endblock %}

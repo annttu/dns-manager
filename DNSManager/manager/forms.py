@@ -1,5 +1,5 @@
-from django.forms import ModelForm
-from manager.models import Domain, Client
+from django.forms import ModelForm, Form, CheckboxInput
+from manager.models import Domain, Client, DNSEntryCache
 
 class DomainForm(ModelForm):
     class Meta:
@@ -13,8 +13,17 @@ class ClientForm(ModelForm):
         fields = ['name', 'comment']
 
 
-
 class ClientEditForm(ModelForm):
     class Meta:
         model = Client
         fields = ['comment',]
+
+
+class StaticEntryForm(ModelForm):
+    class Meta:
+        model = DNSEntryCache
+        fields = ['name', 'ttl', 'type', 'data']
+
+
+class ConfirmDeleteForm(Form):
+    confirmed = CheckboxInput(check_test=lambda x:True)

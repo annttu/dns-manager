@@ -13,6 +13,7 @@ import dns.update
 import dns.reversename
 import dns.resolver
 import dns.edns
+import dns.zone
 import socket
 from dns.exception import DNSException, SyntaxError
 
@@ -131,6 +132,20 @@ def doUpdate(Server, key, keyAlgorithm, Origin, doPTR, Action, TTL, Type, client
         except dns.tsig.PeerBadKey:
             raise DynDNSException('ERROR: The server is refusing our key')
         logger.info('Creating PTR record for %s resulted in: %s' % (Name, dns.rcode.to_text(Response.rcode())))
+
+
+def axfr(Server, key, keyAlgorithm, Origin):
+    """
+    :param Server: DNS-server
+    :param key: TSIG key
+    :param keyAlgorithm: TSIG key algorithm
+    :param Origin: domain
+    :return: List of dns-records
+    """
+    KeyRing = checkKey(key)
+    keyAlgorithm = getAlgorithm(keyAlgorithm)
+    zone = dns.zone.from_xfr(dns.query.xfr(Server, Origin, keyring=KeyRing, keyalgorithm=keyAlgorithm))
+    return zone
 
 
 def get_ipv4(address):

@@ -82,6 +82,28 @@ class Client(models.Model):
             self.secret = '$1$' + sha512(self.secret.encode("utf-8")).hexdigest()
         super(Client, self).save(*args, **kwargs)
 
-
     def __str__(self):
         return 'Client %s' % self.fqdn
+
+
+class DNSEntryCache(models.Model):
+    """
+    Cache for DNS-entries acquired from DNS-server using AXFR
+    """
+    domain = models.ForeignKey(Domain)
+    name = models.CharField(max_length=128, null=False)
+    ttl = models.IntegerField(null=False, default=360)
+    record_class = models.CharField(max_length=128, null=False, default="IN")
+    type = models.CharField(max_length=128, null=False)
+    data = models.CharField(max_length=8192, null=False)
+    timestamp = models.DateTimeField(auto_now_add=True, auto_created=True, null=False)
+
+    @property
+    def fqdn(self):
+        if self.name:
+            return '%s.%s.' % (self.name, self.domain.name)
+        else:
+            return self.domain.name
+
+    def __str__(self):
+        return 'DNSEntryCache %s.%s %s %s' % (self.name, self.domain.name, self.type, self.data[:128])
