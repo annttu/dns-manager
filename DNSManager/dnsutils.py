@@ -60,11 +60,12 @@ DNS_RECORD_TYPES_WITH_PTR = [
     'AAAA'
 ]
 
+
 def checkKey(key):
     try:
         k = {key.rsplit(' ')[0]:key.rsplit(' ')[6]}
     except IndexError:
-        raise DynDNSException('%s is not a valid key. The file should be in DNS KEY record format. See dnssec-keygen(8)' % k)
+        raise DynDNSException('%s is not a valid key. The file should be in DNS KEY record format. See dnssec-keygen(8)' % key)
     try:
         KeyRing = dns.tsigkeyring.from_text(k)
     except:
