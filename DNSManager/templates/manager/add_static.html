@@ -48,7 +48,8 @@
             </div>
             <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10">
-                <button type="submit" class="btn btn-default">{% if instance %}Edit{% else %}Add{% endif %}</button>
+                <button type="submit" class="btn btn-primary">{% if instance %}Edit{% else %}Add{% endif %}</button>
+                <a href="{% url "edit_domain" domain.name %}" role="button" class="btn btn-default">Back</a>
               </div>
             </div>
         </form>

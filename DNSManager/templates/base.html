@@ -10,15 +10,21 @@
 </head>
 <body>
 <div class="container">
-{% if messages %}
-<div class="row">
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} {% if message.tags == "error" %}alert-danger{% endif %}" role="alert">{{ message }}</div>
-        {% endfor %}
+    {% if messages %}
+    <div class="row">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} {% if message.tags == "error" %}alert-danger{% endif %}" role="alert">{{ message }}</div>
+            {% endfor %}
+    </div>
+    {% endif %}
+    {% block content %}
+    {% endblock %}
+
 </div>
-{% endif %}
-{% block content %}
-{% endblock %}
-</div>
+<footer class="footer">
+      <div class="container">
+        <p class="text-muted">Powered by <a href="https://github.com/annttu/dns-manager" target="_blank">DNSManager</a>.</p>
+      </div>
+    </footer>
 </body>
 </html>

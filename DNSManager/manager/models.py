@@ -90,6 +90,10 @@ class DNSEntryCache(models.Model):
     """
     Cache for DNS-entries acquired from DNS-server using AXFR
     """
+
+    class Meta:
+        ordering = ['name', 'type']
+
     domain = models.ForeignKey(Domain)
     name = models.CharField(max_length=128, null=False, blank=True)
     ttl = models.IntegerField(null=False, default=360)

@@ -63,7 +63,7 @@
         <h3>
             Dynamic clients
         </h3>
-        <table class="table table-condensed">
+        <table class="table table-striped">
             <tr>
             <th>
                 Name
@@ -97,7 +97,7 @@
         <h3>
             Static DNS records (<a href="{% url "sync_domain" domain.name %}" title="Sync DNS-records from DNS-server">sync</a>)
         </h3>
-        <table class="table table-condensed">
+        <table class="table table-striped">
             <tr>
             <th>
                 Name
@@ -130,8 +130,8 @@
                     {{ entry.data }}
                 </td>
                 <td>
-                    <a href="{% url "edit_static" entry.domain.fqdn entry.pk %}">edit</a>
-                    <a href="{% url "delete_static" entry.domain.fqdn entry.pk %}">delete</a>
+                    <a href="{% url "edit_static" entry.domain.fqdn entry.pk %}" role="button" class="btn btn-sm btn-primary">edit</a>
+                    <a href="{% url "delete_static" entry.domain.fqdn entry.pk %}" role="button" class="btn btn-sm btn-danger">delete</a>
                 </td>
             </tr>
         {% endfor %}
@@ -141,7 +141,6 @@
         {% endif %}
         <p><a href="{% url "add_static" domain.name %}" role="button" class="btn btn-primary">Add new record</a></p>
      </div>
-  </div>
 </div>
 
 
