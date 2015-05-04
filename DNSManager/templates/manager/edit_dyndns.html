@@ -1,20 +1,26 @@
 {% extends 'base.html' %}
 {% block content %}
-        <div class="row">
-<div class="span-12">
-    <h1>DynDNS client {{client.fqdn}}</h1>
+
+<div class="row">
+    <div class="col-sm-12">
+        <p><a href="{% url "edit_domain" client.domain.name %}">&larr; Back</a></p>
+    </div>
+    <div class="col-sm-12">
+        <h1>DynDNS client {{client.fqdn}}</h1>
+    </div>
 </div>
-<div>
-    <p></p><a href="{% url "edit_domain" client.domain.name %}">&larr; Back</a></p>
-</div>
+
+
 {% if secret %}
     <div class="row">
-        <h4>New secret</h4>
-        <p>New secret for client is <b>"{{ secret }}"</b>. This secret <b>is not shown afterwards</b>.</p>
-        <p>Example update script:</p>
-        <pre>
-            curl -s {{ update_url }}
-        </pre>
+        <div class="col-sm-12">
+            <h4>New secret</h4>
+            <p>New secret for client is <b>"{{ secret }}"</b>. This secret <b>is not shown afterwards</b>.</p>
+            <p>Example update script:</p>
+            <pre>
+                curl -s {{ update_url }}
+            </pre>
+        </div>
     </div>
 {% endif %}
 <div class="row">
@@ -41,12 +47,59 @@
         </form>
     </div>
 </div>
-
 <div class="row">
      <div class="col-sm-12">
          <h4>Actions</h4>
-         <p><a href="{% url "edit_dyndns_secret" client.pk %}">Generate new secret</a></p>
+         <p><a href="{% url "edit_dyndns_secret" client.pk %}">Generate new secret and revoke old</a></p>
      </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-12">
+        <h4>
+            DNS records (<a href="{% url "sync_domain" domain.name %}" title="Sync DNS-entries from DNS-server">sync</a>)
+        </h4>
+        <table class="table table-condensed">
+            <tr>
+            <th>
+                Name
+            </th>
+            <th>
+                TTL
+            </th>
+            <th>
+                Type
+            </th>
+            <th>
+                Data
+            </th>
+            <th>
+                Actions
+            </th>
+        </tr>
+        {% for entry in records %}
+            <tr>
+                <td>
+                    <a href="{% url "edit_static" entry.domain.fqdn entry.pk %}">{{ entry.fqdn }}</a>
+                </td>
+                <td>
+                    {{ entry.ttl }}
+                </td>
+                <td>
+                    {{ entry.type }}
+                </td>
+                <td>
+                    {{ entry.data }}
+                </td>
+                <td>
+                    <a href="{% url "edit_static" entry.domain.fqdn entry.pk %}">edit</a>
+                    <a href="{% url "delete_static" entry.domain.fqdn entry.pk %}">delete</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </table>
+     </div>
+  </div>
 </div>
 
 {% endblock %}

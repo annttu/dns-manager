@@ -1,17 +1,29 @@
 {% extends 'base.html' %}
 {% block content %}
-        <div class="row">
-<div class="span-12">
-    <h1>Delete static entry {{ entry.fqdn }} {{ entry.type }} {{ entry.data }}</h1>
-</div>
-<div>
-    <p></p><a href="{% url "edit_domain" domain.name %}">&larr; Back</a></p>
+<div class="row">
+    <div class="col-sm-12">
+        <p><a href="{% url "edit_domain" domain.name %}">&larr; Back</a></p>
+    </div>
+    <div class="col-sm-12">
+        <h1>Delete DNS record</h1>
+    </div>
 </div>
 <div class="row">
     <div class="col-sm-12">
-        <h4>Details</h4>
+        <div class="panel panel-danger">
+            <div class="panel-heading">Warning!</div>
+            <div class="panel-body">
+                <p>Are you sure to delete static DNS-entry {{ entry.fqdn }} {{ entry.type }} {{ entry.data }}?</p>
+                <p>This action cannot be reverted after confirmation.</p>
+            </div>
+       </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
         <form class="form-horizontal" action="{% url "delete_static" domain.name entry.pk %}" method="post">
             {% csrf_token %}
+
             <div class="form-group {% if form.confirm.errors %}has-error has-feedback{% endif %}">
                 <label class="col-sm-2 control-label" for="confirm">Confirm delete {% if form.confirm.errors %}, {% for error in form.confirm.errors %} {{ error }}{% endfor %}{% endif %}</label>
                 <div class="col-sm-10">

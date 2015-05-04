@@ -8,9 +8,11 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.http import JsonResponse, HttpResponseRedirect, Http404, HttpRequest
 from .models import Client, Domain, TSIG_KEY_TYPES, DNSEntryCache
-from .forms import DomainForm, ClientForm, ClientEditForm, StaticEntryForm, ConfirmDeleteForm
+from .forms import *
 from utils import hash_password, gen_password
+from django.db import transaction
 import socket
+from dns.exception import DNSException
 import logging
 import dnsutils
 
@@ -47,16 +49,18 @@ def edit_domain(request, name):
     except Domain.DoesNotExist:
         raise Http404
 
-    synchronize(domain)
+
+    try:
+        synchronize(domain)
+    except:
+        messages.error(request, "Cannot refresh dns-entries from server")
 
     entries = []
 
     for entry in DNSEntryCache.objects.filter(domain=domain).all():
         try:
-            x = domain.client_set.get(name=entry.name)
-            print(x)
+            domain.client_set.get(name=entry.name)
         except Client.DoesNotExist:
-            print("foo")
             entries.append(entry)
 
     return render_to_response('manager/edit_domain.html', {'domain': domain, 'static_entries': entries,
@@ -93,7 +97,22 @@ def edit_dyndns(request, id):
             messages.success(request, "Details updated!")
         else:
             messages.error(request, "Failed to update details")
-    return render_to_response('manager/edit_dyndns.html', {'client': client},
+
+    # Fetch and show also associated entries
+    try:
+        synchronize(client.domain, True)
+        messages.success(request, "Successfully updated cache")
+    except:
+        messages.error(request, "Cannot refresh dns-entries from server")
+
+
+    records = []
+
+    for entry in DNSEntryCache.objects.filter(domain=client.domain).all():
+        if entry.name == client.name:
+            records.append(entry)
+
+    return render_to_response('manager/edit_dyndns.html', {'client': client, 'records': records},
                               context_instance=RequestContext(request))
 
 
@@ -109,9 +128,22 @@ def edit_dyndns_secret(request, id):
     url = "http"
     if request.is_secure():
         url += "s"
-
     url += "://%s%s" % (request.get_host(), reverse('api_update', args=(new_secret,)))
-    return render_to_response('manager/edit_dyndns.html', {'client': client, 'secret': new_secret, 'update_url': url},
+
+    # Fetch and show also associated entries
+    try:
+        synchronize(client.domain, True)
+        messages.success(request, "Successfully updated cache")
+    except:
+        messages.error(request, "Cannot refresh dns-entries from server")
+
+    records = []
+
+    for entry in DNSEntryCache.objects.filter(domain=client.domain).all():
+        if entry.name == client.name:
+            records.append(entry)
+
+    return render_to_response('manager/edit_dyndns.html', {'client': client, 'records': records, 'secret': new_secret, 'update_url': url},
                               context_instance=RequestContext(request))
 
 
@@ -172,10 +204,14 @@ def synchronize_domain(request, domain):
     except Domain.DoesNotExist:
         raise Http404
 
-    synchronize(domain)
+    try:
+        synchronize(domain, True)
+        messages.success(request, "Successfully updated cache")
+    except:
+        messages.error(request, "Cannot refresh dns-entries from server")
 
-    return render_to_response('manager/synchronize.html', {'domain': domain},
-                              context_instance=RequestContext(request))
+
+    return redirect('edit_domain', domain.name)
 
 @login_required
 def add_static(request, domain):
@@ -184,31 +220,47 @@ def add_static(request, domain):
     except Domain.DoesNotExist:
         raise Http404
 
-    synchronize(domain)
+    try:
+        synchronize(domain)
+    except:
+        messages.error(request, "Cannot refresh dns-entries from server")
 
     form = None
+
+    response_data = {
+        'dns_record_types': dnsutils.DNS_RECORD_TYPES,
+        'domain': domain,
+        'form': form
+    }
 
     if request.method == 'POST':
         instance = DNSEntryCache()
         instance.domain = domain
-        form = StaticEntryForm(request.POST, instance=instance)
+        form = StaticEntryForm(request.POST, initial={'name': ''}, instance=instance)
         if form.is_valid():
+            response_data['form'] = form
+            try:
+                dnsutils.validate_data(form.cleaned_data['type'], form.cleaned_data['data'],
+                                       form.cleaned_data['name'])
+            except dnsutils.DNSRecordException as e:
+                messages.error(request, str(e))
+                return render_to_response('manager/add_static.html', response_data,
+                                          context_instance=RequestContext(request))
+
+            # Save data
             entry = form.save()
-            messages.success(request, "Successfully added entry %s.%s %s %s %s" % (
-                form.cleaned_data['name'], domain.fqdn, form.cleaned_data['ttl'],
-                form.cleaned_data['type'], form.cleaned_data['data']))
 
-
-            # Add to real dns
-
+            # Add record also to dns-server
             dnsutils.doUpdate(domain.master, domain.tsig_key, domain.tsig_type, domain.name, False,
-                              'update', str(form.cleaned_data['ttl']), form.cleaned_data['type'],
-                              "%s.%s" % (form.cleaned_data['name'], domain.fqdn), form.cleaned_data['data'])
+                              'add', str(form.cleaned_data['ttl']), form.cleaned_data['type'],
+                              entry.fqdn, form.cleaned_data['data'])
+
+            messages.success(request, "Successfully added entry %s %s %s %s" % (
+                             entry.fqdn, entry.ttl, entry.type, entry.data))
 
             return redirect('edit_domain', domain.name)
 
-
-    return render_to_response('manager/add_static.html', {'domain': domain, 'form': form},
+    return render_to_response('manager/add_static.html', response_data,
                               context_instance=RequestContext(request))
 
 
@@ -226,33 +278,62 @@ def edit_static(request, domain, entry):
 
     try:
         instance = DNSEntryCache.objects.get(pk=int(entry))
+        old_instance = DNSEntryCache.objects.get(pk=int(entry))
     except DNSEntryCache.DoesNotExist:
         raise Http404
 
-    form = None
+    name = str(instance.name)
+
+    response_data = {
+        'dns_record_types': dnsutils.DNS_RECORD_TYPES,
+        'instance': instance,
+        'domain': domain,
+        'form': None
+    }
 
     if request.method == 'POST':
-        form = StaticEntryForm(request.POST, instance=instance)
+        form = StaticEntryEditForm(request.POST, initial={'name': ''}, instance=instance)
         if form.is_valid():
-            entry = form.save()
-            messages.success(request, "Successfully added entry %s.%s %s %s %s" % (
-                form.cleaned_data['name'], domain.fqdn, form.cleaned_data['ttl'],
-                form.cleaned_data['type'], form.cleaned_data['data']))
 
+            response_data['form'] = form
+            if form.cleaned_data['name'] != name:
+                messages.error(request, "To change entry name, delete old record and add a new one.")
+                return render_to_response('manager/add_static.html', response_data,
+                                          context_instance=RequestContext(request))
+
+            try:
+                dnsutils.validate_data(form.cleaned_data['type'], form.cleaned_data['data'],
+                                       form.cleaned_data['name'])
+            except dnsutils.DNSRecordException as e:
+                messages.error(request, str(e))
+                return render_to_response('manager/add_static.html', response_data,
+                                          context_instance=RequestContext(request))
+
+            entry = form.save()
 
             # Add to real dns
 
-            dnsutils.doUpdate(domain.master, domain.tsig_key, domain.tsig_type, domain.name, False,
-                              'update', str(form.cleaned_data['ttl']), form.cleaned_data['type'],
-                              "%s.%s" % (form.cleaned_data['name'], domain.fqdn), form.cleaned_data['data'])
+            try:
+                dnsutils.doUpdate(domain.master, domain.tsig_key, domain.tsig_type, domain.name, False,
+                              'delete', str(old_instance.ttl), old_instance.type,
+                              old_instance.fqdn, old_instance.data)
+                dnsutils.doUpdate(domain.master, domain.tsig_key, domain.tsig_type, domain.name, False,
+                              'add', str(form.cleaned_data['ttl']), form.cleaned_data['type'],
+                              entry.fqdn, form.cleaned_data['data'])
+                messages.success(request, "Successfully updated entry %s %s %s %s" % (
+                             entry.fqdn, entry.ttl, entry.type, entry.data))
+
+            except Exception:
+                messages.error(request, "Cannot update values to DNS-server.")
+                transaction.rollback()
+
 
             return redirect('edit_domain', domain.name)
 
     else:
-        form = StaticEntryForm(instance=instance)
+        response_data['form'] = StaticEntryForm(instance=instance)
 
-
-    return render_to_response('manager/add_static.html', {'domain': domain, 'form': form},
+    return render_to_response('manager/add_static.html', response_data,
                               context_instance=RequestContext(request))
 
 
@@ -280,12 +361,14 @@ def delete_static(request, domain, entry):
             dnsutils.doUpdate(domain.master, domain.tsig_key, domain.tsig_type, domain.name, False,
                               'delete', str(instance.ttl), instance.type,
                               instance.fqdn, instance.data)
+            messages.success(request, "Successfully deleted entry %s %s %s %s" % (
+                             instance.fqdn, instance.ttl, instance.type, instance.data))
             return redirect('edit_domain', domain.name)
     return render_to_response('manager/delete_static.html', {'domain': domain, 'entry': instance, 'form': form},
                               context_instance=RequestContext(request))
 
 
-def synchronize(domain, force = False):
+def synchronize(domain, force=False):
     """
     Synchronize domain dns-entries to database.
     Synchronize only if more than 60 seconds from previous.

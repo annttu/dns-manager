@@ -1,11 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
-        <div class="row">
-<div class="span-12">
-    <h1>Domain {{domain.name}}</h1>
-</div>
-<div>
-    <p></p><a href="{% url "index" %}">&larr; Back</a></p>
+
+<div class="row">
+    <div class="col-sm-12">
+        <p><a href="{% url "index" %}">&larr; Back</a></p>
+    </div>
+    <div class="col-sm-12">
+        <h1>Domain {{domain.name}}</h1>
+    </div>
 </div>
 
 <div class="row">
@@ -58,9 +60,9 @@
 
 <div class="row">
     <div class="col-sm-12">
-        <h4>
+        <h3>
             Dynamic clients
-        </h4>
+        </h3>
         <table class="table table-condensed">
             <tr>
             <th>
@@ -85,16 +87,16 @@
         {% if not domain.client_set.all %}
         <p>No clients yet, add one!</p>
         {% endif %}
-        <a href="{% url "add_dyndns" domain.name %}">Add new</a>
+        <p><a href="{% url "add_dyndns" domain.name %}" role="button" class="btn btn-primary">Add new client</a></p>
     </div>
 </div>
 
 
 <div class="row">
     <div class="col-sm-12">
-        <h4>
-            Static entries
-        </h4>
+        <h3>
+            Static DNS records (<a href="{% url "sync_domain" domain.name %}" title="Sync DNS-records from DNS-server">sync</a>)
+        </h3>
         <table class="table table-condensed">
             <tr>
             <th>
@@ -134,11 +136,12 @@
             </tr>
         {% endfor %}
         </table>
-        {% if not domain.client_set.all %}
-        <p>No clients yet, add one!</p>
+        {% if not static_entries %}
+        <p>No records yet, add one!</p>
         {% endif %}
-        <a href="{% url "add_static" domain.name %}">Add new</a>
-    </div>
+        <p><a href="{% url "add_static" domain.name %}" role="button" class="btn btn-primary">Add new record</a></p>
+     </div>
+  </div>
 </div>
 
 

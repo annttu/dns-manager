@@ -1,12 +1,15 @@
 {% extends 'base.html' %}
 {% block content %}
-        <div class="row">
-<div class="span-12">
-    <h1>DNS manager!</h1>
-</div>
+<div class="row">
+    <div class="jumbotron">
+        <h1>DNS manager!</h1>
+        <p>Stateless DNS manager with support for DynDNS-clients.</p>
+    </div>
 </div>
 
+
 <div class="row">
+    <div class="col-sm-12">
     <h2>
         Domains
     </h2>
@@ -35,6 +38,7 @@
     <p>No domains, add one!</p>
     {% endif %}
     <p><a href="{% url "add_domain" %}">Add domain</a></p>
+        </div>
 </div>
 
 {% endblock %}

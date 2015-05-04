@@ -1,35 +1,42 @@
 {% extends 'base.html' %}
 {% block content %}
-        <div class="row">
-<div class="span-12">
-    <h1>Add domain</h1>
+
+<div class="row">
+    <div class="col-sm-12">
+        <p><a href="{% url "edit_domain" domain.name %}">&larr; Back</a></p>
+    </div>
+    <div class="col-sm-12">
+        <h1>{% if instance %}Edit DNS record{% else %}Add DNS record{% endif %}</h1>
+    </div>
 </div>
-<div>
-    <p></p><a href="{% url "edit_domain" domain.name %}">&larr; Back</a></p>
-</div>
+
 <div class="row">
     <div class="col-sm-12">
         <h4>Details</h4>
-        <form class="form-horizontal" action="{% url "add_static" domain.name %}" method="post">
+        <form class="form-horizontal" action="{% if instance %}{% url "edit_static" domain.name instance.id %}{% else %}{% url "add_static" domain.name %}{% endif %}" method="post">
             {% csrf_token %}
             <div class="form-group {% if form.name.errors %}has-error has-feedback{% endif %}">
                 <label class="col-sm-2 control-label" for="name">Name {% if form.name.errors %}, {% for error in form.name.errors %} {{ error }}{% endfor %}{% endif %}</label>
                 <div class="col-sm-10">
-                     <input type="text" class="form-control" name="name" id="name" value="{{ form.name.value }}" placeholder="Name">
+                     <input type="text" class="form-control" name="name" id="name" value="{{ form.name.value }}" {% if instance %}readonly="readonly"{% endif %} placeholder="Name">
                 </div>
             </div>
 
             <div class="form-group {% if form.ttl.errors %}has-error has-feedback{% endif %}">
                 <label class="col-sm-2 control-label" for="ttl">TTL {% if form.ttl.errors %}, {% for error in form.ttl.errors %} {{ error }}{% endfor %}{% endif %}</label>
                 <div class="col-sm-10">
-                     <input type="text" class="form-control" name="ttl" id="ttl" value="{% if form.ttl.value %}{{ form.ttl.value }}{% else %}1800{% endif %}" placeholder="TTL">
+                     <input type="number" class="form-control" name="ttl" id="ttl" value="{% if form.ttl.value %}{{ form.ttl.value }}{% else %}1800{% endif %}" placeholder="TTL">
                 </div>
             </div>
 
             <div class="form-group {% if form.type.errors %}has-error has-feedback{% endif %}">
                 <label class="col-sm-2 control-label" for="type">Type {% if form.type.errors %}, {% for error in form.type.errors %} {{ error }}{% endfor %}{% endif %}</label>
                 <div class="col-sm-10">
-                     <input type="text" class="form-control" name="type" id="type" value="{% if form.ttl.value %}{{ form.type.value }}{% else %}A{% endif %}" placeholder="Type">
+                    <select class="form-control" name="type" id="type">
+                        {% for name in dns_record_types %}
+                        <option value="{{name}}"{% if form.type.value == name %} selected="selected"{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                      </select>
                 </div>
             </div>
 
@@ -41,7 +48,7 @@
             </div>
             <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10">
-                <button type="submit" class="btn btn-default">Add</button>
+                <button type="submit" class="btn btn-default">{% if instance %}Edit{% else %}Add{% endif %}</button>
               </div>
             </div>
         </form>

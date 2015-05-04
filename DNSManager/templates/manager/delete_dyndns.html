@@ -1,11 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
-        <div class="row">
-<div class="span-12">
-    <h1>Delete dyndns client {{ client.fqdn }}</h1>
-</div>
-<div>
-    <p></p><a href="{% url "edit_domain" client.domain.name %}">&larr; Back</a></p>
+
+<div class="row">
+    <div class="col-sm-12">
+        <p><a href="{% url "edit_domain" client.domain.name %}">&larr; Back</a></p>
+    </div>
+    <div class="col-sm-12">
+        <h1>Delete dynamic entry {{ client.fqdn }}</h1>
+    </div>
 </div>
 <div class="row">
     <div class="col-sm-12">

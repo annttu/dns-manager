@@ -1,5 +1,6 @@
 from django.forms import ModelForm, Form, CheckboxInput
 from manager.models import Domain, Client, DNSEntryCache
+from dnsutils import validate_data
 
 class DomainForm(ModelForm):
     class Meta:
@@ -24,6 +25,9 @@ class StaticEntryForm(ModelForm):
         model = DNSEntryCache
         fields = ['name', 'ttl', 'type', 'data']
 
+
+class StaticEntryEditForm(StaticEntryForm):
+    readonly_fields = ('name',)
 
 class ConfirmDeleteForm(Form):
     confirmed = CheckboxInput(check_test=lambda x:True)

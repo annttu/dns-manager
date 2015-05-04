@@ -91,11 +91,11 @@ class DNSEntryCache(models.Model):
     Cache for DNS-entries acquired from DNS-server using AXFR
     """
     domain = models.ForeignKey(Domain)
-    name = models.CharField(max_length=128, null=False)
+    name = models.CharField(max_length=128, null=False, blank=True)
     ttl = models.IntegerField(null=False, default=360)
-    record_class = models.CharField(max_length=128, null=False, default="IN")
-    type = models.CharField(max_length=128, null=False)
-    data = models.CharField(max_length=8192, null=False)
+    record_class = models.CharField(max_length=128, null=False, default="IN", blank=False)
+    type = models.CharField(max_length=128, null=False, blank=False)
+    data = models.CharField(max_length=8192, null=False, blank=False)
     timestamp = models.DateTimeField(auto_now_add=True, auto_created=True, null=False)
 
     @property
@@ -103,7 +103,7 @@ class DNSEntryCache(models.Model):
         if self.name:
             return '%s.%s.' % (self.name, self.domain.name)
         else:
-            return self.domain.name
+            return '%s.' % self.domain.name
 
     def __str__(self):
         return 'DNSEntryCache %s.%s %s %s' % (self.name, self.domain.name, self.type, self.data[:128])
