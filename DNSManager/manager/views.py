@@ -357,10 +357,11 @@ def delete_static(request, domain, entry):
     if request.method == 'POST':
         form = ConfirmDeleteForm(request.POST)
         if form.is_valid():
-            instance.delete()
+
             dnsutils.doUpdate(domain.master, domain.tsig_key, domain.tsig_type, domain.name, False,
                               'delete', str(instance.ttl), instance.type,
                               instance.fqdn, instance.data)
+            instance.delete()
             messages.success(request, "Successfully deleted entry %s %s %s %s" % (
                              instance.fqdn, instance.ttl, instance.type, instance.data))
             return redirect('edit_domain', domain.name)

@@ -139,6 +139,8 @@ def doUpdate(Server, key, keyAlgorithm, Origin, doPTR, Action, TTL, Type, client
         Update.replace(Name, TTL, Type, myPayload)
         if doPTR == True:
             ptrUpdate.replace(ptrName, TTL, 'PTR', ptrTarget)
+    else:
+        raise DynDNSException("Unknown action %s" % Action)
     # Do the update
     try:
         Response = dns.query.tcp(Update, Server)
