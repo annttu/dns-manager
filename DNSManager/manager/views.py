@@ -397,6 +397,9 @@ def synchronize(domain, force=False):
         # 60 IN A 88.113.97.101
         for line in rdataset.to_text().splitlines():
             (ttl, rclass, rtype, rdata) = line.split(None, 3)
+            # Skip dnssec records for now.
+            if rtype in ['RRSIG', 'TYPE65534', 'DNSKEY', 'NSEC']:
+                continue
             entry = DNSEntryCache()
             if name != "@":
                 entry.name = name
