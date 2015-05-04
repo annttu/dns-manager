@@ -26,10 +26,10 @@
     {% for domain in domains %}
         <tr>
             <td>
-                <a href="{% url "edit_domain" domain.name %}">{{ domain.name }}</a>
+                <a href="{% url "show_domain" domain.name %}">{{ domain.name }}</a>
             </td>
             <td>
-                <a href="{% url "edit_domain" domain.name %}">edit</a>
+                <a href="{% url "show_domain" domain.name %}">edit</a>
             </td>
         </tr>
     {% endfor %}

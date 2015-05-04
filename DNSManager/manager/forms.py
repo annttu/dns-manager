@@ -8,6 +8,14 @@ class DomainForm(ModelForm):
          fields = ['name', 'comment', 'tsig_key', 'tsig_type', 'master']
 
 
+class DomainEditForm(ModelForm):
+    readonly_fields = ('name',)
+
+    class Meta:
+         model = Domain
+         fields = ['name', 'comment', 'tsig_key', 'tsig_type', 'master']
+
+
 class ClientForm(ModelForm):
     class Meta:
         model = Client

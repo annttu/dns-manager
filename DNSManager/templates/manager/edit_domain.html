@@ -3,7 +3,7 @@
 
 <div class="row">
     <div class="col-sm-12">
-        <p><a href="{% url "index" %}">&larr; Back</a></p>
+        <p><a href="{% url "show_domain" domain.name %}">&larr; Back</a></p>
     </div>
     <div class="col-sm-12">
         <h1>Domain {{domain.name}}</h1>
@@ -15,34 +15,34 @@
         <h4>Edit domain</h4>
         <form class="form-horizontal" action="{% url "edit_domain" domain.name %}" method="POST">
         {% csrf_token %}
-            <div class="form-group">
+            <div class="form-group {% if form.name.errors %}has-error has-feedback{% endif %}">
             <label class="col-sm-2 control-label">Name</label>
             <div class="col-sm-10">
-              <p class="form-control-static">{{ domain.name }}</p>
+              <input type="text" class="form-control" value="{{ domain.name }}" name="name" id="name" readonly="readonly">
             </div>
           </div>
-          <div class="form-group">
+          <div class="form-group {% if form.comment.errors %}has-error has-feedback{% endif %}">
             <label for="comment" class="col-sm-2 control-label">Comment</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" id="comment" value="{{ domain.comment}}" placeholder="Comment">
+              <input type="text" class="form-control" name="comment" id="comment" value="{{ domain.comment}}" placeholder="Comment">
             </div>
           </div>
-          <div class="form-group">
+          <div class="form-group {% if form.master.errors %}has-error has-feedback{% endif %}">
             <label for="master" class="col-sm-2 control-label">Master server</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" value="{{ domain.master }}" id="master" placeholder="ns1.example.com">
+              <input type="text" class="form-control" value="{{ domain.master }}" name="master" id="master" placeholder="ns1.example.com">
             </div>
           </div>
-           <div class="form-group">
+           <div class="form-group {% if form.tsig_key.errors %}has-error has-feedback{% endif %}">
             <label for="master" class="col-sm-2 control-label">TSIG key</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" value="{{ domain.tsig_key }}" id="tsig_key" placeholder="example.com. IN ...">
+              <input type="text" class="form-control" value="{{ domain.tsig_key }}" name="tsig_key" id="tsig_key" placeholder="example.com. IN ...">
             </div>
             </div>
-            <div class="form-group">
+            <div class="form-group {% if form.tsig_type.errors %}has-error has-feedback{% endif %}">
                 <label for="master" class="col-sm-2 control-label">TSIG key algorithm</label>
                 <div class="col-sm-10">
-                    <select class="form-control">
+                    <select class="form-control" name="tsig_type" id="tsig_type">
                         {% for type, name in key_types %}
                         <option value="{{type}}">{{ name }}</option>
                         {% endfor %}
@@ -56,91 +56,6 @@
             </div>
         </form>
     </div>
-</div>
-
-<div class="row">
-    <div class="col-sm-12">
-        <h3>
-            Dynamic clients
-        </h3>
-        <table class="table table-striped">
-            <tr>
-            <th>
-                Name
-            </th>
-            <th>
-                Actions
-            </th>
-        </tr>
-        {% for client in domain.client_set.all %}
-            <tr>
-                <td>
-                    <a href="{% url "edit_dyndns" client.pk %}">{{ client.fqdn }}</a>
-                </td>
-                <td>
-                    <a href="{% url "edit_dyndns" client.pk %}">edit</a>
-                    <a href="{% url "delete_dyndns" client.pk %}">delete</a>
-                </td>
-            </tr>
-        {% endfor %}
-        </table>
-        {% if not domain.client_set.all %}
-        <p>No clients yet, add one!</p>
-        {% endif %}
-        <p><a href="{% url "add_dyndns" domain.name %}" role="button" class="btn btn-primary">Add new client</a></p>
-    </div>
-</div>
-
-
-<div class="row">
-    <div class="col-sm-12">
-        <h3>
-            Static DNS records (<a href="{% url "sync_domain" domain.name %}" title="Sync DNS-records from DNS-server">sync</a>)
-        </h3>
-        <table class="table table-striped">
-            <tr>
-            <th>
-                Name
-            </th>
-            <th>
-                TTL
-            </th>
-            <th>
-                Type
-            </th>
-            <th>
-                Data
-            </th>
-            <th>
-                Actions
-            </th>
-        </tr>
-        {% for entry in static_entries %}
-            <tr>
-                <td>
-                    <a href="{% url "edit_static" entry.domain.fqdn entry.pk %}">{{ entry.fqdn }}</a>
-                </td>
-                <td>
-                    {{ entry.ttl }}
-                </td>
-                <td>
-                    {{ entry.type }}
-                </td>
-                <td>
-                    {{ entry.data }}
-                </td>
-                <td>
-                    <a href="{% url "edit_static" entry.domain.fqdn entry.pk %}" role="button" class="btn btn-sm btn-primary">edit</a>
-                    <a href="{% url "delete_static" entry.domain.fqdn entry.pk %}" role="button" class="btn btn-sm btn-danger">delete</a>
-                </td>
-            </tr>
-        {% endfor %}
-        </table>
-        {% if not static_entries %}
-        <p>No records yet, add one!</p>
-        {% endif %}
-        <p><a href="{% url "add_static" domain.name %}" role="button" class="btn btn-primary">Add new record</a></p>
-     </div>
 </div>
 
 

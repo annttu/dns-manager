@@ -49,6 +49,29 @@ def edit_domain(request, name):
     except Domain.DoesNotExist:
         raise Http404
 
+    if request.method == 'POST':
+        name = str(domain.name)
+        f = DomainEditForm(request.POST, instance=domain)
+        if f.is_valid():
+            if name != f.cleaned_data['name']:
+                messages.error(request, "Name cannot be changed!")
+            else:
+                domain = f.save()
+                messages.success(request, "Successfully update domain %s details" % (f.cleaned_data['name']))
+                return redirect('show_domain', domain.name)
+    else:
+        f = None
+
+    return render_to_response('manager/edit_domain.html', {'domain': domain, 'form': f,
+                                                           'key_types': TSIG_KEY_TYPES},
+                              context_instance=RequestContext(request))
+
+@login_required
+def show_domain(request, name):
+    try:
+        domain = Domain.objects.get(name=name, users__pk=request.user.pk)
+    except Domain.DoesNotExist:
+        raise Http404
 
     try:
         synchronize(domain)
@@ -63,8 +86,7 @@ def edit_domain(request, name):
         except Client.DoesNotExist:
             entries.append(entry)
 
-    return render_to_response('manager/edit_domain.html', {'domain': domain, 'static_entries': entries,
-                                                           'key_types': TSIG_KEY_TYPES},
+    return render_to_response('manager/show_domain.html', {'domain': domain, 'static_entries': entries},
                               context_instance=RequestContext(request))
 
 @login_required
@@ -77,7 +99,7 @@ def add_domain(request):
             domain.users.add(request.user)
             domain.save()
             messages.success(request, "Successfully added domain %s" % (f.cleaned_data['name']))
-            return redirect('edit_domain', domain.name)
+            return redirect('show_domain', domain.name)
     else:
         f = None
     return render_to_response('manager/add_domain.html', {'key_types': TSIG_KEY_TYPES, 'domain': f},
@@ -191,7 +213,7 @@ def delete_dyndns(request, id):
         if form.is_valid():
             delete_client(client)
             client.delete()
-            return redirect('edit_domain', client.domain.name)
+            return redirect('show_domain', client.domain.name)
     return render_to_response('manager/delete_dyndns.html', {'client': client, 'form': form},
                               context_instance=RequestContext(request))
 
@@ -211,7 +233,7 @@ def synchronize_domain(request, domain):
         messages.error(request, "Cannot refresh dns-entries from server")
 
 
-    return redirect('edit_domain', domain.name)
+    return redirect('show_domain', domain.name)
 
 @login_required
 def add_static(request, domain):
@@ -258,7 +280,7 @@ def add_static(request, domain):
             messages.success(request, "Successfully added entry %s %s %s %s" % (
                              entry.fqdn, entry.ttl, entry.type, entry.data))
 
-            return redirect('edit_domain', domain.name)
+            return redirect('show_domain', domain.name)
 
     return render_to_response('manager/add_static.html', response_data,
                               context_instance=RequestContext(request))
@@ -328,7 +350,7 @@ def edit_static(request, domain, entry):
                 transaction.rollback()
 
 
-            return redirect('edit_domain', domain.name)
+            return redirect('show_domain', domain.name)
 
     else:
         response_data['form'] = StaticEntryForm(instance=instance)
@@ -364,7 +386,7 @@ def delete_static(request, domain, entry):
             instance.delete()
             messages.success(request, "Successfully deleted entry %s %s %s %s" % (
                              instance.fqdn, instance.ttl, instance.type, instance.data))
-            return redirect('edit_domain', domain.name)
+            return redirect('show_domain', domain.name)
     return render_to_response('manager/delete_static.html', {'domain': domain, 'entry': instance, 'form': form},
                               context_instance=RequestContext(request))
 

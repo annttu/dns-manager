@@ -3,7 +3,7 @@
 
 <div class="row">
     <div class="col-sm-12">
-        <p><a href="{% url "edit_domain" domain.name %}">&larr; Back</a></p>
+        <p><a href="{% url "show_domain" domain.name %}">&larr; Back</a></p>
     </div>
     <div class="col-sm-12">
         <h1>{% if instance %}Edit DNS record{% else %}Add DNS record{% endif %}</h1>
@@ -49,7 +49,7 @@
             <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10">
                 <button type="submit" class="btn btn-primary">{% if instance %}Edit{% else %}Add{% endif %}</button>
-                <a href="{% url "edit_domain" domain.name %}" role="button" class="btn btn-default">Back</a>
+                <a href="{% url "show_domain" domain.name %}" role="button" class="btn btn-default">Back</a>
               </div>
             </div>
         </form>
