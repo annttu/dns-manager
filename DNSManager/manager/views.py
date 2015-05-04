@@ -26,11 +26,16 @@ def login_page(request):
     if request.POST:
         username = request.POST['username']
         password = request.POST['password']
+        remember = None
+        if 'remember' in request.POST:
+            remember = request.POST['remember']
 
         user = authenticate(username=username, password=password)
         if user is not None:
             if user.is_active:
                 login(request, user)
+                if remember:
+                    request.session.set_expiry(0)
                 return HttpResponseRedirect('/')
     return render_to_response('manager/login.html',
                               context_instance=RequestContext(request))
