@@ -1,7 +1,7 @@
-DynDNS updater
-==============
+DNSManager
+==========
 
-DynDNS updater to update records using tsig key.
+DNSManager uses TSIG-key to add, update and delete DNS-records. DNSmanager works with all DNS-servers which support Dynamic updates [(RFC2136)](http://tools.ietf.org/html/rfc2136) using secure transport [(RFC3007)](http://tools.ietf.org/html/rfc3007). For example Bind9 and PowerDNS are supported.
 
 
 Installation
@@ -22,6 +22,29 @@ Usage
 =====
 
     ./manage.py runserver
+
+Zone config for Bind9
+=====================
+
+Configuration for bind9 to allow dynamic updates using TSIG-key.
+
+Create first TSIG-key.
+
+    dnssec-keygen -a HMAC-SHA256 -b 256 -n HOST domain.tld.tsigkey
+    cat domain.tld.tsigkey.*.key
+
+Copy the bas64 encoded key and use to replace secret in <b>key</b> row below. Full row is also needed later when domain is added to the frontend.
+
+Update zone config with following
+
+    key "domain.tld.tsigkey." { algorithm hmac-sha256; secret "XC+/XU45WGC6ycCT9uORuqs+cPWqoyMl98F63Cw2czo="; };
+    zone "domain.tld" { type master; file "/etc/bind/domain.tld"; allow-transfer { my-master-server-here; key "domain.tld.tsigkey."; }; allow-update { key "domain.tld.tsigkey."; }; };
+
+Note to use exactly same name for key in config than in dnssec-keygen command. Otherwise it does not work.
+
+Finally reload config
+
+    rndc reload
 
 License
 =======
