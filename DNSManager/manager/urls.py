@@ -20,6 +20,7 @@ urlpatterns = patterns('',
     url(r'^domains/(?P<name>[a-zA-Z0-9\.\-]+)/?$', "manager.views.show_domain", name="show_domain"),
 
     url(r'^dyndns/edit/(?P<id>[0-9]+)$', "manager.views.edit_dyndns", name="edit_dyndns"),
+    url(r'^dyndns/sync/(?P<id>[0-9]+)$', "manager.views.synchronize_dyndns", name="sync_dyndns"),
     url(r'^dyndns/delete/(?P<id>[0-9]+)$', "manager.views.delete_dyndns", name="delete_dyndns"),
     url(r'^dyndns/edit/(?P<id>[0-9]+)/secret$', "manager.views.edit_dyndns_secret", name="edit_dyndns_secret"),
     url(r'^dyndns/add/(?P<name>[a-zA-Z0-9\.\-]+)$', "manager.views.add_dyndns", name="add_dyndns"),

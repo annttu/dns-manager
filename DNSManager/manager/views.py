@@ -139,7 +139,7 @@ def edit_dyndns(request, id):
         if entry.name == client.name:
             records.append(entry)
 
-    return render_to_response('manager/edit_dyndns.html', {'client': client, 'records': records},
+    return render_to_response('manager/edit_dyndns.html', {'domain': client.domain, 'client': client, 'records': records},
                               context_instance=RequestContext(request))
 
 
@@ -239,6 +239,23 @@ def synchronize_domain(request, domain):
 
 
     return redirect('show_domain', domain.name)
+
+
+@login_required
+def synchronize_dyndns(request, id):
+    try:
+        client = Client.objects.get(pk=int(id), domain__users__pk=request.user.pk)
+    except Client.DoesNotExist:
+        raise Http404
+
+    try:
+        synchronize(client.domain, True)
+        messages.success(request, "Successfully updated cache")
+    except:
+        messages.error(request, "Cannot refresh dns-entries from server")
+
+    return redirect('edit_dyndns', client.pk)
+
 
 @login_required
 def add_static(request, domain):
