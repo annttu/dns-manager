@@ -170,7 +170,7 @@ def edit_dyndns_secret(request, id):
         if entry.name == client.name:
             records.append(entry)
 
-    return render_to_response('manager/edit_dyndns.html', {'client': client, 'records': records, 'secret': new_secret, 'update_url': url},
+    return render_to_response('manager/edit_dyndns.html', {'domain': client.domain, 'client': client, 'records': records, 'secret': new_secret, 'update_url': url},
                               context_instance=RequestContext(request))
 
 
