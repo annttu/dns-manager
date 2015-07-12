@@ -1,7 +1,10 @@
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
+
 
 admin.autodiscover()
+
 
 urlpatterns = patterns('',
     # Examples:
@@ -10,6 +13,9 @@ urlpatterns = patterns('',
     url(r'^/?$', 'manager.views.index', name='index'),
     url(r'^login/?$', 'manager.views.login_page', name='login'),
     url(r'^logout/?$', 'manager.views.login_page', name='logout'),
+
+    url(r'^user/password/?$', auth_views.password_change, {'template_name': 'manager/user_password.html'}, name="change_password"),
+    url(r'^user/password/changed/?$', 'manager.views.password_changed', name='password_change_done'),
 
     url(r'^domains/add/?$', "manager.views.add_domain", name="add_domain"),
     url(r'^domains/(?P<name>[a-zA-Z0-9\.\-]+)/edit/?$', "manager.views.edit_domain", name="edit_domain"),

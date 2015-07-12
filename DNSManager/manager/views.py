@@ -511,3 +511,8 @@ def delete_client(client):
         entry.delete()
 
 
+@login_required
+def password_changed(request):
+    messages.success(request, "Password successfully changed!")
+    return redirect("index")
+    #return index(request)
