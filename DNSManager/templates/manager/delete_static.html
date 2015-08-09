@@ -25,9 +25,9 @@
             {% csrf_token %}
 
             <div class="form-group {% if form.confirm.errors %}has-error has-feedback{% endif %}">
-                <label class="col-sm-2 control-label" for="confirm">Confirm delete {% if form.confirm.errors %}, {% for error in form.confirm.errors %} {{ error }}{% endfor %}{% endif %}</label>
+                <label class="col-sm-2 control-label" for="id_confirmed">Confirm delete* {% if form.confirmed.errors %}, {% for error in form.confirmed.errors %} {{ error }}{% endfor %}{% endif %} {% if form.confirmed.warnings %}, {% for warning in form.confirmed.warnings %} {{ warning }}{% endfor %}{% endif %}</label>
                 <div class="col-sm-10">
-                     <input type="checkbox" class="form-control" name="confirm" id="confirm">
+                     <input id="id_confirmed" type="checkbox" class="form-control" name="confirmed">
                 </div>
             </div>
 

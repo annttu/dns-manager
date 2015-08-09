@@ -284,8 +284,8 @@ def add_static(request, domain):
         if form.is_valid():
             response_data['form'] = form
             try:
-                dnsutils.validate_data(form.cleaned_data['type'], form.cleaned_data['data'],
-                                       form.cleaned_data['name'])
+                dnsutils.validate_data(form.cleaned_data['type'].strip(), form.cleaned_data['data'].strip(),
+                                       form.cleaned_data['name'].strip())
             except dnsutils.DNSRecordException as e:
                 messages.error(request, str(e))
                 return render_to_response('manager/add_static.html', response_data,
@@ -400,8 +400,8 @@ def delete_static(request, domain, entry):
 
     if request.method == 'POST':
         form = ConfirmDeleteForm(request.POST)
+        print(form['confirmed'])
         if form.is_valid():
-
             dnsutils.doUpdate(domain.master, domain.tsig_key, domain.tsig_type, domain.name, False,
                               'delete', str(instance.ttl), instance.type,
                               instance.fqdn, instance.data)

@@ -1,4 +1,4 @@
-from django.forms import ModelForm, Form, CheckboxInput
+from django.forms import ModelForm, Form, CheckboxInput, BooleanField
 from manager.models import Domain, Client, DNSEntryCache
 from dnsutils import validate_data
 
@@ -33,9 +33,18 @@ class StaticEntryForm(ModelForm):
         model = DNSEntryCache
         fields = ['name', 'ttl', 'type', 'data']
 
+    def clean_name(self):
+        name = self.cleaned_data['name']
+        return name.strip()
+
+    def clean_data(self):
+        data = self.cleaned_data['data']
+        return data.strip()
+
 
 class StaticEntryEditForm(StaticEntryForm):
     readonly_fields = ('name',)
 
+
 class ConfirmDeleteForm(Form):
-    confirmed = CheckboxInput(check_test=lambda x:True)
+    confirmed = BooleanField(required=True)
