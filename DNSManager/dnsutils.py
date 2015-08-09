@@ -250,7 +250,7 @@ def validate_data(type, data, name):
         raise DNSRecordException("Invalid DNS-server for NS record, syntax \"ns.example.com.\"")
 
     elif type == 'CNAME':
-        if name != '':
+        if name == '':
             raise DNSRecordException("CNAME record cannot be added for empty name.")
         if len(data) > 2:
             return True
