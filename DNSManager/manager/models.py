@@ -1,4 +1,5 @@
 import socket
+from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
@@ -108,6 +109,15 @@ class DNSEntryCache(models.Model):
             return '%s.%s.' % (self.name, self.domain.name)
         else:
             return '%s.' % self.domain.name
+
+    @property
+    def age(self):
+        if self.domain:
+            print("asdf")
+            delta = datetime.now() - self.timestamp
+            print("delta: %s" % delta)
+            return delta.seconds
+        return None
 
     def __str__(self):
         return 'DNSEntryCache %s.%s %s %s' % (self.name, self.domain.name, self.type, self.data[:128])

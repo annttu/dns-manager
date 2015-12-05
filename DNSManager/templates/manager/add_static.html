@@ -10,6 +10,18 @@
     </div>
 </div>
 
+{% if instance %}
+{% if instance.age > 60 %}
+<div class="row">
+    <div class="col-sm-12">
+        <p class="alert-info">Records are more than 60 seconds old and may not be valid anymore!</p>
+    </div>
+</div>
+{% else %}
+        adsfasdf
+{% endif %}
+{% endif %}
+
 <div class="row">
     <div class="col-sm-12">
         <h4>Details</h4>
