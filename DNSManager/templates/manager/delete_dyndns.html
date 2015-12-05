@@ -17,13 +17,13 @@
             <div class="form-group {% if form.confirm.errors %}has-error has-feedback{% endif %}">
                 <label class="col-sm-2 control-label" for="confirm">Confirm delete {% if form.confirm.errors %}, {% for error in form.confirm.errors %} {{ error }}{% endfor %}{% endif %}</label>
                 <div class="col-sm-10">
-                     <input type="checkbox" class="form-control" name="confirm" id="confirm">
+                     <input type="checkbox" class="form-control" name="confirmed" id="confirmed">
                 </div>
             </div>
 
             <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10">
-                <button type="submit" class="btn btn-default">Add</button>
+                <button type="submit" class="btn btn-default">Delete</button>
               </div>
             </div>
         </form>
