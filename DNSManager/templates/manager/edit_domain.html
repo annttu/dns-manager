@@ -44,7 +44,7 @@
                 <div class="col-sm-10">
                     <select class="form-control" name="tsig_type" id="tsig_type">
                         {% for type, name in key_types %}
-                        <option value="{{type}}">{{ name }}</option>
+                        <option value="{{type}}"{% if domain.tsig_type == type %} selected="selected"{% endif %}>{{ name }}</option>
                         {% endfor %}
                       </select>
                 </div>
