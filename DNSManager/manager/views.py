@@ -42,7 +42,7 @@ def login_page(request):
 
 @login_required(login_url='/login')
 def index(request):
-    domains = Domain.objects.filter(users__pk = request.user.pk).all()
+    domains = Domain.user_objects(request.user).all()
     return render_to_response('manager/index.html', {'domains': domains},
                               context_instance=RequestContext(request))
 
@@ -50,7 +50,7 @@ def index(request):
 def edit_domain(request, name):
 
     try:
-        domain = Domain.objects.get(name=name, users__pk=request.user.pk)
+        domain = Domain.user_objects(request.user).get(name=name)
     except Domain.DoesNotExist:
         raise Http404
 
@@ -74,7 +74,7 @@ def edit_domain(request, name):
 @login_required
 def show_domain(request, name):
     try:
-        domain = Domain.objects.get(name=name, users__pk=request.user.pk)
+        domain = Domain.user_objects(request.user).get(name=name)
     except Domain.DoesNotExist:
         raise Http404
 
@@ -85,7 +85,7 @@ def show_domain(request, name):
 
     entries = []
 
-    for entry in DNSEntryCache.objects.filter(domain=domain).all():
+    for entry in DNSEntryCache.user_objects(request.user).filter(domain=domain).all():
         try:
             domain.client_set.get(name=entry.name)
         except Client.DoesNotExist:
@@ -114,7 +114,7 @@ def add_domain(request):
 @login_required
 def edit_dyndns(request, id):
     try:
-        client = Client.objects.get(pk=int(id), domain__users__pk=request.user.pk)
+        client = Client.user_objects(request.user).get(pk=int(id))
     except Client.DoesNotExist:
         raise Http404
     if request.method == 'POST':
@@ -135,7 +135,7 @@ def edit_dyndns(request, id):
 
     records = []
 
-    for entry in DNSEntryCache.objects.filter(domain=client.domain).all():
+    for entry in DNSEntryCache.user_objects(request.user).filter(domain=client.domain).all():
         if entry.name == client.name:
             records.append(entry)
 
@@ -146,7 +146,7 @@ def edit_dyndns(request, id):
 @login_required
 def edit_dyndns_secret(request, id):
     try:
-        client = Client.objects.get(pk=int(id), domain__users__pk=request.user.pk)
+        client = Client.user_objects(request.user).get(pk=int(id))
     except Client.DoesNotExist:
         raise Http404
     new_secret = gen_password(32)
@@ -166,7 +166,7 @@ def edit_dyndns_secret(request, id):
 
     records = []
 
-    for entry in DNSEntryCache.objects.filter(domain=client.domain).all():
+    for entry in DNSEntryCache.user_objects(request.user).filter(domain=client.domain).all():
         if entry.name == client.name:
             records.append(entry)
 
@@ -177,7 +177,7 @@ def edit_dyndns_secret(request, id):
 @login_required
 def add_dyndns(request, name):
     try:
-        domain = Domain.objects.get(name=name, users__pk=request.user.pk)
+        domain = Domain.user_objects(request.user).get(name=name)
     except Domain.DoesNotExist:
         raise Http404
     form = None
@@ -189,7 +189,7 @@ def add_dyndns(request, name):
 
             # Test unique
 
-            if len(Client.objects.filter(domain=domain, name=form.cleaned_data['name']).all()) != 0:
+            if len(Client.user_objects(request.user).filter(domain=domain, name=form.cleaned_data['name']).all()) != 0:
                 messages.error(request, "Client with same name already added!")
 
             else:
@@ -209,7 +209,7 @@ def add_dyndns(request, name):
 @login_required
 def delete_dyndns(request, id):
     try:
-        client = Client.objects.get(pk=int(id), domain__users__pk=request.user.pk)
+        client = Client.user_objects(request.user).get(pk=int(id))
     except Client.DoesNotExist:
         raise Http404
     form = None
@@ -227,7 +227,7 @@ def delete_dyndns(request, id):
 @login_required
 def synchronize_domain(request, domain):
     try:
-        domain = Domain.objects.get(name=domain, users__pk=request.user.pk)
+        domain = Domain.user_objects(request.user).get(name=domain)
     except Domain.DoesNotExist:
         raise Http404
 
@@ -244,7 +244,7 @@ def synchronize_domain(request, domain):
 @login_required
 def synchronize_dyndns(request, id):
     try:
-        client = Client.objects.get(pk=int(id), domain__users__pk=request.user.pk)
+        client = Client.user_objects(request.user).get(pk=int(id))
     except Client.DoesNotExist:
         raise Http404
 
@@ -260,7 +260,7 @@ def synchronize_dyndns(request, id):
 @login_required
 def add_static(request, domain):
     try:
-        domain = Domain.objects.get(name=domain, users__pk=request.user.pk)
+        domain = Domain.user_objects(request.user).get(name=domain)
     except Domain.DoesNotExist:
         raise Http404
 
@@ -314,15 +314,15 @@ def edit_static(request, domain, entry):
         domain = domain[:-1]
 
     try:
-        domain = Domain.objects.get(name=domain, users__pk=request.user.pk)
+        domain = Domain.user_objects(request.user).get(name=domain)
     except Domain.DoesNotExist:
         raise Http404
 
     #synchronize(domain)
 
     try:
-        instance = DNSEntryCache.objects.get(pk=int(entry))
-        old_instance = DNSEntryCache.objects.get(pk=int(entry))
+        instance = DNSEntryCache.user_objects(request.user).get(pk=int(entry))
+        old_instance = DNSEntryCache.user_objects(request.user).get(pk=int(entry))
     except DNSEntryCache.DoesNotExist:
         raise Http404
 
@@ -387,12 +387,12 @@ def delete_static(request, domain, entry):
         domain = domain[:-1]
 
     try:
-        domain = Domain.objects.get(name=domain, users__pk=request.user.pk)
+        domain = Domain.user_objects(request.user).get(name=domain)
     except Domain.DoesNotExist:
         raise Http404
 
     try:
-        instance = DNSEntryCache.objects.get(pk=int(entry))
+        instance = DNSEntryCache.user_objects(request.user).get(pk=int(entry))
     except DNSEntryCache.DoesNotExist:
         raise Http404
 
@@ -423,7 +423,7 @@ def synchronize(domain, force=False):
 
     if not force:
         try:
-            DNSEntryCache.objects.get(timestamp__gt=(datetime.now() - timedelta(seconds=60)))
+            DNSEntryCache.objects.get(domain=domain, timestamp__gt=(datetime.now() - timedelta(seconds=60)))
             return
         except DNSEntryCache.DoesNotExist:
             pass
