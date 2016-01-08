@@ -37,6 +37,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'manager',
+    'password_reset',
 )
 
 MIDDLEWARE_CLASSES = (

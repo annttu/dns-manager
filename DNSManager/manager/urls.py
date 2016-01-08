@@ -32,4 +32,6 @@ urlpatterns = patterns('',
     url(r'^dyndns/add/(?P<name>[a-zA-Z0-9\.\-]+)$', "manager.views.add_dyndns", name="add_dyndns"),
     url(r'^api/update/(?P<secret>[a-zA-Z0-9]+)$', 'manager.views.update', name="api_update"),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^user/reset_password/', include('password_reset.urls')),
 )
+
