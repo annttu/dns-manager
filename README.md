@@ -7,6 +7,13 @@ DNSManager uses TSIG-key to add, update and delete DNS-records. DNSmanager works
 Installation
 ============
 
+Prerequisites
+
+ * Running postgresql server
+ * Some packages
+   * sudo apt-get install libpq-dev ( debian, ubuntu, etc. )
+   * sudo yum install postgresql-devel ( centos, redhat, etc. )
+
 Install packages etc.
 
     virtualenv env --python=python3.4
@@ -15,13 +22,20 @@ Install packages etc.
     cd DNSManager
     vi manager/settings.py
     ./manage.py syncdb
-    
+    # Create admin account for yourself
+    ./manage.py createsuperuser
 
 
 Usage
 =====
 
     ./manage.py runserver
+
+Go to http://127.0.0.1:8000
+
+I strongly recommend to setup a reverse proxy with a SSL-support for
+connections over Internet. Nginx or Apache is fine for this.
+
 
 Zone config for Bind9
 =====================
