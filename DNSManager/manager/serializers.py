@@ -72,22 +72,15 @@ class DNSEntryCacheSerializer(serializers.Serializer):
 
         instance = DNSEntryCache.objects.create(**validated_data)
 
-        dnsutils.doUpdate(domain.master, domain.tsig_key, domain.tsig_type, domain.name, False,
-                              'add', str(validated_data['ttl']), validated_data['type'],
-                              instance.fqdn, validated_data['data'])
-
         return instance
 
     def update(self, instance, validated_data):
-
 
         instance.data = validated_data.get('data', instance.data)
         instance.type = validated_data.get('type', instance.type)
         instance.name = validated_data.get('name', instance.name)
         instance.ttk = validated_data.get('ttl', instance.ttl)
         instance.record_class = validated_data.get('record_class', instance.record_class)
-
-
 
         instance.save()
         return instance

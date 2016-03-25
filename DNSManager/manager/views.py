@@ -606,7 +606,11 @@ class RecordList(APIView):
 
     def get(self, request, domain_id, format=None):
         domain = self.get_domain(domain_id)
-        synchronize(domain)
+        try:
+            synchronize(domain)
+        except (DNSException, dnsutils.DynDNSException):
+            # TODO: inform user somehow
+            pass
         records = get_domain_records(request, domain)
         serializer = DNSEntryCacheSerializer(records, many=True)
         return JSONResponse(serializer.data)
@@ -617,9 +621,15 @@ class RecordList(APIView):
         serializer = DNSEntryCacheSerializer(data=data)
         if serializer.is_valid():
             record = serializer.save(domain=domain)
-            dnsutils.doUpdate(domain.master, domain.tsig_key, domain.tsig_type,
-                          domain.name, False, 'add', str(record.ttl),
-                          record.type, record.fqdn, record.data)
+            try:
+                dnsutils.doUpdate(domain.master, domain.tsig_key, domain.tsig_type,
+                                  domain.name, False, 'add', str(record.ttl),
+                                  record.type, record.fqdn, record.data)
+            except (DNSException, dnsutils.DynDNSException):
+                logger.exception("Failed to update value to dns, domain %s" % record.domain.name)
+                transaction.rollback()
+                return JSONResponse({"detail": 'Cannot update values to DNS-server'},
+                                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             return JSONResponse(serializer.data, status=status.HTTP_201_CREATED)
         return JSONResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -631,7 +641,10 @@ class RecordDetail(APIView):
 
     def get_object(self, domain_id, pk):
         domain = self.get_domain(domain_id)
-        synchronize(domain)
+        try:
+            synchronize(domain)
+        except (DNSException, dnsutils.DynDNSException):
+            logger.exception("Failed to synchronize domain %s" % domain.name)
         try:
             return DNSEntryCache.user_objects(self.request.user).get(pk=pk, domain=domain)
         except DNSEntryCache.DoesNotExist:
@@ -655,23 +668,33 @@ class RecordDetail(APIView):
         if serializer.is_valid():
             new_instance = serializer.save()
 
-            dnsutils.doUpdate(record.domain.master, record.domain.tsig_key, record.domain.tsig_type,
+            try:
+                dnsutils.doUpdate(record.domain.master, record.domain.tsig_key, record.domain.tsig_type,
                               record.domain.name, False, 'delete', str(record.ttl), record.type,
                               record.fqdn, record.data)
-            dnsutils.doUpdate(new_instance.domain.master, new_instance.domain.tsig_key, new_instance.domain.tsig_type,
+                dnsutils.doUpdate(new_instance.domain.master, new_instance.domain.tsig_key, new_instance.domain.tsig_type,
                               new_instance.domain.name, False, 'add', str(new_instance.ttl),
                               new_instance.type, new_instance.fqdn, new_instance.data)
-
+            except (DNSException, dnsutils.DynDNSException):
+                logger.exception("Failed to update value to dns, domain %s" % record.domain.name)
+                transaction.rollback()
+                return JSONResponse({"detail": 'Cannot update values to DNS-server'},
+                                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             return JSONResponse(serializer.data)
         return JSONResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, domain_id, pk, format=None):
         record = self.get_object(domain_id, pk)
 
-        dnsutils.doUpdate(record.domain.master, record.domain.tsig_key, record.domain.tsig_type,
-                          record.domain.name, False, 'delete', str(record.ttl), record.type,
-                          record.fqdn, record.data)
-
+        try:
+            dnsutils.doUpdate(record.domain.master, record.domain.tsig_key, record.domain.tsig_type,
+                              record.domain.name, False, 'delete', str(record.ttl), record.type,
+                              record.fqdn, record.data)
+        except (DNSException, dnsutils.DynDNSException):
+                logger.exception("Failed to update value to dns, domain %s" % record.domain.name)
+                transaction.rollback()
+                return JSONResponse({"detail": 'Cannot delete record from DNS-server'},
+                                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         record.delete()
 
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
