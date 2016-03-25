@@ -1,6 +1,8 @@
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
+from rest_framework.urlpatterns import format_suffix_patterns
+from manager import views as manager_views
 
 
 admin.autodiscover()
@@ -33,5 +35,14 @@ urlpatterns = patterns('',
     url(r'^api/update/(?P<secret>[a-zA-Z0-9]+)$', 'manager.views.update', name="api_update"),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^user/reset_password/', include('password_reset.urls')),
+
+
+) + format_suffix_patterns(
+    (
+        url(r'^rest/v1/domains/$', manager_views.DomainList.as_view(), name="api_domain_list"),
+        url(r'^rest/v1/domains/(?P<pk>[0-9]+)/?$', manager_views.DomainDetail.as_view(), name="api_domain_detail"),
+        url(r'^rest/v1/domains/(?P<domain_id>[0-9]+)/records/?$', manager_views.RecordList.as_view()),
+        url(r'^rest/v1/domains/(?P<domain_id>[0-9]+)/records/(?P<pk>[0-9]+)$', manager_views.RecordDetail.as_view()),
+    )
 )
 

@@ -6,7 +6,16 @@ from django.contrib.auth.views import login
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
-from django.http import JsonResponse, HttpResponseRedirect, Http404, HttpRequest
+from django.http import JsonResponse, HttpResponseRedirect, Http404, HttpRequest, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.parsers import JSONParser
+from rest_framework.renderers import JSONRenderer
+from rest_framework.views import APIView
+from rest_framework import permissions
+
+from manager.serializers import DomainSerializer, DNSEntryCacheSerializer
 from .models import Client, Domain, TSIG_KEY_TYPES, DNSEntryCache
 from .forms import *
 from utils import hash_password, gen_password
@@ -39,6 +48,24 @@ def login_page(request):
                 return HttpResponseRedirect('/')
     return render_to_response('manager/login.html',
                               context_instance=RequestContext(request))
+
+
+def get_domain_records(request, domain):
+    try:
+        synchronize(domain)
+    except:
+        if isinstance(request, HttpRequest):
+            messages.error(request, "Cannot refresh dns-entries from server")
+
+    entries = []
+
+    for entry in DNSEntryCache.user_objects(request.user).filter(domain=domain).all():
+        try:
+            domain.client_set.get(name=entry.name)
+        except Client.DoesNotExist:
+            entries.append(entry)
+    return entries
+
 
 @login_required(login_url='/login')
 def index(request):
@@ -78,19 +105,7 @@ def show_domain(request, name):
     except Domain.DoesNotExist:
         raise Http404
 
-    try:
-        synchronize(domain)
-    except:
-        messages.error(request, "Cannot refresh dns-entries from server")
-
-    entries = []
-
-    for entry in DNSEntryCache.user_objects(request.user).filter(domain=domain).all():
-        try:
-            domain.client_set.get(name=entry.name)
-        except Client.DoesNotExist:
-            entries.append(entry)
-
+    entries = get_domain_records(request, domain)
     return render_to_response('manager/show_domain.html', {'domain': domain, 'static_entries': entries},
                               context_instance=RequestContext(request))
 
@@ -516,3 +531,147 @@ def password_changed(request):
     messages.success(request, "Password successfully changed!")
     return redirect("index")
     #return index(request)
+
+
+# Rest stuff
+
+
+class JSONResponse(HttpResponse):
+    """
+    An HttpResponse that renders its content into JSON.
+    """
+    def __init__(self, data, **kwargs):
+        content = JSONRenderer().render(data)
+        kwargs['content_type'] = 'application/json'
+        super(JSONResponse, self).__init__(content, **kwargs)
+
+
+class DomainList(APIView):
+
+    def get(self, request, format=None):
+        domains = Domain.user_objects(self.request.user).all()
+        serializer = DomainSerializer(domains, many=True)
+        return JSONResponse(serializer.data)
+
+    def post(self, request, format=None):
+        data = JSONParser().parse(request)
+        serializer = DomainSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return JSONResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JSONResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def perform_create(self, serializer):
+        serializer.save(users=[self.request.user])
+
+
+class DomainDetail(APIView):
+    """
+    Retrieve, update or delete a domain.
+    """
+
+    def get_object(self, pk):
+        try:
+            return Domain.user_objects(self.request.user).get(pk=pk)
+        except Domain.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        domain = self.get_object(pk)
+        serializer = DomainSerializer(domain)
+        return JSONResponse(serializer.data)
+
+    def put(self, request, pk, format=None):
+        domain = self.get_object(pk)
+        data = JSONParser().parse(request)
+        serializer = DomainSerializer(domain, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return JSONResponse(serializer.data)
+        return JSONResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, format=None):
+        domain = self.get_object(pk)
+        domain.delete()
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+
+
+class RecordList(APIView):
+
+    def get_domain(self, domain_id):
+        try:
+            return Domain.user_objects(self.request.user).get(pk=domain_id)
+        except Domain.DoesNotExist:
+            raise Http404
+
+    def get(self, request, domain_id, format=None):
+        domain = self.get_domain(domain_id)
+        synchronize(domain)
+        records = get_domain_records(request, domain)
+        serializer = DNSEntryCacheSerializer(records, many=True)
+        return JSONResponse(serializer.data)
+
+    def post(self, request, domain_id, format=None):
+        domain = self.get_domain(domain_id)
+        data = JSONParser().parse(request)
+        serializer = DNSEntryCacheSerializer(data=data)
+        if serializer.is_valid():
+            record = serializer.save(domain=domain)
+            dnsutils.doUpdate(domain.master, domain.tsig_key, domain.tsig_type,
+                          domain.name, False, 'add', str(record.ttl),
+                          record.type, record.fqdn, record.data)
+            return JSONResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return JSONResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RecordDetail(APIView):
+    """
+    Retrieve, update or delete a record.
+    """
+
+    def get_object(self, domain_id, pk):
+        domain = self.get_domain(domain_id)
+        synchronize(domain)
+        try:
+            return DNSEntryCache.user_objects(self.request.user).get(pk=pk, domain=domain)
+        except DNSEntryCache.DoesNotExist:
+            raise Http404
+
+    def get_domain(self, domain_id):
+        try:
+            return Domain.user_objects(self.request.user).get(pk=domain_id)
+        except Domain.DoesNotExist:
+            raise Http404
+
+    def get(self, request, domain_id, pk, format=None):
+        record = self.get_object(domain_id, pk)
+        serializer = DNSEntryCacheSerializer(record)
+        return JSONResponse(serializer.data)
+
+    def put(self, request, domain_id, pk, format=None):
+        record = self.get_object(domain_id, pk)
+        data = JSONParser().parse(request)
+        serializer = DNSEntryCacheSerializer(record, data=data)
+        if serializer.is_valid():
+            new_instance = serializer.save()
+
+            dnsutils.doUpdate(record.domain.master, record.domain.tsig_key, record.domain.tsig_type,
+                              record.domain.name, False, 'delete', str(record.ttl), record.type,
+                              record.fqdn, record.data)
+            dnsutils.doUpdate(new_instance.domain.master, new_instance.domain.tsig_key, new_instance.domain.tsig_type,
+                              new_instance.domain.name, False, 'add', str(new_instance.ttl),
+                              new_instance.type, new_instance.fqdn, new_instance.data)
+
+            return JSONResponse(serializer.data)
+        return JSONResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, domain_id, pk, format=None):
+        record = self.get_object(domain_id, pk)
+
+        dnsutils.doUpdate(record.domain.master, record.domain.tsig_key, record.domain.tsig_type,
+                          record.domain.name, False, 'delete', str(record.ttl), record.type,
+                          record.fqdn, record.data)
+
+        record.delete()
+
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
