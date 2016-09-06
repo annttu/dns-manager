@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 import dnsutils
-from manager.models import Domain, DNSEntryCache
+from manager.models import Domain, DNSEntryCache, Client
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -42,6 +42,37 @@ class DomainSerializer(serializers.Serializer):
         instance.master = validated_data.get('master', instance.master)
 
         instance.save()
+        return instance
+
+
+class DynDNSSerializer(serializers.Serializer):
+    """
+    domain = models.ForeignKey(Domain)
+    secret = models.CharField(max_length=1024, null=False)  # SHA512 hashed secret
+    name = models.CharField(max_length=128, null=False)
+    comment = models.CharField(max_length=8192, null=False, default="")
+    """
+
+    pk = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(required=True, allow_blank=True, max_length=128)
+    comment = serializers.CharField(required=True, allow_blank=True, max_length=8192)
+    fqdn = serializers.CharField(read_only=True)
+
+    def update(self, instance, validated_data):
+        instance.comment = validated_data.get('comment', instance.data)
+
+        instance.save()
+        return instance
+
+
+class DynDNSSecretSerializer(DynDNSSerializer):
+    secret = serializers.CharField(required=True, allow_blank=False, max_length=128)
+    domain_id = serializers.IntegerField(required=True)
+
+    def create(self, validated_data):
+        data = dict(validated_data)
+        instance = Client.objects.create(**data)
+
         return instance
 
 

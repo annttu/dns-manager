@@ -15,7 +15,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 from rest_framework import permissions
 
-from manager.serializers import DomainSerializer, DNSEntryCacheSerializer
+from manager.serializers import DomainSerializer, DNSEntryCacheSerializer, DynDNSSerializer, DynDNSSecretSerializer
 from .models import Client, Domain, TSIG_KEY_TYPES, DNSEntryCache
 from .forms import *
 from utils import hash_password, gen_password
@@ -594,6 +594,57 @@ class DomainDetail(APIView):
         domain = self.get_object(pk)
         domain.delete()
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+
+
+class DynDNSClient(APIView):
+    """
+    Add, modify and delete DynDNS clients
+    """
+
+    def get_object(self, dyndns_id):
+        try:
+            return Client.user_objects(self.request.user).get(pk=dyndns_id)
+        except Client.DoesNotExist:
+            raise Http404
+
+    def get(self, request, domain_id, pk, format=None):
+        client = self.get_object(pk)
+        print("asdfasdf")
+        serializer = DynDNSSerializer(client)
+        return JSONResponse(serializer.data)
+
+    def delete(self, request, domain_id, pk, format=None):
+        client = self.get_object(pk)
+        client.delete()
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+
+
+class DynDNSList(APIView):
+    """
+    Add, modify and delete DynDNS clients
+    """
+
+    def get_objects(self, domain_id):
+        return Client.user_objects(self.request.user).filter(domain_id=domain_id).all()
+
+    def get(self, request, domain_id, format=None):
+        clients = self.get_objects(domain_id)
+        serializer = DynDNSSerializer(clients, many=True)
+        return JSONResponse(serializer.data)
+
+    def post(self, request, domain_id, format=None):
+        data = JSONParser().parse(request)
+        data['domain_id'] = domain_id
+        secret = gen_password(length=32)
+        data['secret'] = secret
+        serializer = DynDNSSecretSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            # Put unhashed serial back to response
+            data = dict(serializer.data)
+            data['secret'] = secret
+            return JSONResponse(data, status=status.HTTP_201_CREATED)
+        return JSONResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RecordList(APIView):

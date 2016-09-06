@@ -43,6 +43,8 @@ urlpatterns = patterns('',
         url(r'^rest/v1/domains/(?P<pk>[0-9]+)/?$', manager_views.DomainDetail.as_view(), name="api_domain_detail"),
         url(r'^rest/v1/domains/(?P<domain_id>[0-9]+)/records/?$', manager_views.RecordList.as_view()),
         url(r'^rest/v1/domains/(?P<domain_id>[0-9]+)/records/(?P<pk>[0-9]+)$', manager_views.RecordDetail.as_view()),
+        url(r'^rest/v1/domains/(?P<domain_id>[0-9]+)/dyndns/?$', manager_views.DynDNSList.as_view()),
+        url(r'^rest/v1/domains/(?P<domain_id>[0-9]+)/dyndns/(?P<pk>[0-9]+)/?$', manager_views.DynDNSClient.as_view()),
     )
 )
 
