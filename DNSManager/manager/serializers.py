@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 import dnsutils
 from manager.models import Domain, DNSEntryCache, Client
+from rest_framework.validators import UniqueValidator
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -23,7 +24,9 @@ class DomainSerializer(serializers.Serializer):
     master = models.CharField(max_length=8192, null=False, help_text="DNS zone master server address", validators=[check_master])
     """
     pk = serializers.IntegerField(read_only=True)
-    name = serializers.CharField(required=True, allow_blank=False, max_length=128)
+    name = serializers.CharField(required=True, allow_blank=False, max_length=128,
+                                 validators=[UniqueValidator(queryset=Domain.objects.all())]
+                                 )
     comment = serializers.CharField(required=True, allow_blank=True, max_length=8192)
     users = UserSerializer(many=True, read_only=True)
     tsig_key = serializers.CharField(required=True, allow_blank=False, max_length=8192)
@@ -54,7 +57,10 @@ class DynDNSSerializer(serializers.Serializer):
     """
 
     pk = serializers.IntegerField(read_only=True)
-    name = serializers.CharField(required=True, allow_blank=True, max_length=128)
+    name = serializers.CharField(required=True, allow_blank=True, max_length=128,
+                                 validators=[UniqueValidator(queryset=Client.objects.all(),
+                                                             message="Duplicate key for field 'name'")]
+                                )
     comment = serializers.CharField(required=True, allow_blank=True, max_length=8192)
     fqdn = serializers.CharField(read_only=True)
 
