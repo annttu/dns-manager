@@ -11,7 +11,7 @@ Prerequisites
 
  * Running postgresql server
  * Some packages
-   * sudo apt-get install libpq-dev ( debian, ubuntu, etc. )
+   * sudo apt-get install libpq-dev python3-dev ( debian, ubuntu, etc. )
    * sudo yum install postgresql-devel ( centos, redhat, etc. )
 
 Install packages etc.
