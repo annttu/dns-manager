@@ -448,29 +448,44 @@ def synchronize(domain, force=False):
     zone = dnsutils.axfr(domain.master, domain.tsig_key,
                          domain.tsig_type, domain.fqdn)
 
-    for entry in DNSEntryCache.objects.filter(domain=domain).all():
-        entry.delete()
+    current_entries = list(DNSEntryCache.objects.filter(domain=domain).all())
 
     for name, rdataset in zone.iterate_rdatasets():
         name = name.to_text()
         # There is maybe better way to do it, but dnspython is complex...
-        # 60 IN A 88.113.97.101
+        # 60 IN A 1.2.3.4
         for line in rdataset.to_text().splitlines():
             (ttl, rclass, rtype, rdata) = line.split(None, 3)
             # Skip dnssec records for now.
             if rtype in ['RRSIG', 'TYPE65534', 'DNSKEY', 'NSEC']:
                 continue
-            entry = DNSEntryCache()
-            if name != "@":
+            rtype = rtype.strip()
+            rdata = rdata.strip()
+            rclass = rclass.strip()
+            ttl = int(ttl)
+            if name == "@":
+                name = ""
+            found = False
+            id = 0
+            for entry in current_entries:
+                if entry.name == name and entry.ttl == ttl and entry.type == rtype and entry.data == rdata and entry.record_class == rclass:
+                    found = True
+                    del current_entries[id]
+                    break
+                id += 1
+            if not found:
+                entry = DNSEntryCache()
                 entry.name = name
-            else:
-                entry.name = ""
-            entry.domain = domain
-            entry.ttl = int(ttl)
-            entry.record_class = rclass.strip()
-            entry.type = rtype.strip()
-            entry.data = rdata.strip()
-            entry.save()
+                entry.domain = domain
+                entry.ttl = ttl
+                entry.record_class = rclass.strip()
+                entry.type = rtype.strip()
+                entry.data = rdata.strip()
+                entry.save()
+
+    for entry in current_entries:
+        # Remove entries not found any more
+        entry.delete()
 
 
 def update(request, secret):
