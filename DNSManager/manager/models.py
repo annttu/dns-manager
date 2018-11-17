@@ -78,7 +78,7 @@ class Client(models.Model):
     """
     Client updates certain DNS record
     """
-    domain = models.ForeignKey(Domain)
+    domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
     secret = models.CharField(max_length=1024, null=False)  # SHA512 hashed secret
     name = models.CharField(max_length=128, null=False)
     comment = models.CharField(max_length=8192, null=False, default="")
@@ -112,7 +112,7 @@ class DNSEntryCache(models.Model):
     class Meta:
         ordering = ['name', 'type']
 
-    domain = models.ForeignKey(Domain)
+    domain = models.ForeignKey(Domain, on_delete=models.CASCADE)
     name = models.CharField(max_length=128, null=False, blank=True)
     ttl = models.IntegerField(null=False, default=360)
     record_class = models.CharField(max_length=128, null=False, default="IN", blank=False)

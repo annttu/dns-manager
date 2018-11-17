@@ -2,9 +2,9 @@ from datetime import datetime, timedelta
 from django.contrib import messages
 from django.contrib.auth import logout, authenticate
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import login
-from django.core.urlresolvers import reverse
-from django.shortcuts import render_to_response, redirect
+from django.contrib.auth import login
+from django.urls import reverse
+from django.shortcuts import redirect, render
 from django.template import RequestContext
 from django.http import JsonResponse, HttpResponseRedirect, Http404, HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -46,8 +46,7 @@ def login_page(request):
                 if remember:
                     request.session.set_expiry(0)
                 return HttpResponseRedirect('/')
-    return render_to_response('manager/login.html',
-                              context_instance=RequestContext(request))
+    return render(request, 'manager/login.html')
 
 
 def get_domain_records(request, domain):
@@ -70,8 +69,7 @@ def get_domain_records(request, domain):
 @login_required(login_url='/login')
 def index(request):
     domains = Domain.user_objects(request.user).all()
-    return render_to_response('manager/index.html', {'domains': domains},
-                              context_instance=RequestContext(request))
+    return render(request, 'manager/index.html', {'domains': domains})
 
 @login_required
 def edit_domain(request, name):
@@ -94,9 +92,8 @@ def edit_domain(request, name):
     else:
         f = None
 
-    return render_to_response('manager/edit_domain.html', {'domain': domain, 'form': f,
-                                                           'key_types': TSIG_KEY_TYPES},
-                              context_instance=RequestContext(request))
+    return render(request, 'manager/edit_domain.html', {'domain': domain, 'form': f,
+                                                           'key_types': TSIG_KEY_TYPES})
 
 @login_required
 def show_domain(request, name):
@@ -106,8 +103,8 @@ def show_domain(request, name):
         raise Http404
 
     entries = get_domain_records(request, domain)
-    return render_to_response('manager/show_domain.html', {'domain': domain, 'static_entries': entries},
-                              context_instance=RequestContext(request))
+    return render(request, 'manager/show_domain.html', {'domain': domain, 'static_entries': entries})
+
 
 @login_required
 def add_domain(request):
@@ -122,8 +119,7 @@ def add_domain(request):
             return redirect('show_domain', domain.name)
     else:
         f = None
-    return render_to_response('manager/add_domain.html', {'key_types': TSIG_KEY_TYPES, 'domain': f},
-                              context_instance=RequestContext(request))
+    return render(request, 'manager/add_domain.html', {'key_types': TSIG_KEY_TYPES, 'domain': f})
 
 
 @login_required
@@ -154,8 +150,7 @@ def edit_dyndns(request, id):
         if entry.name == client.name:
             records.append(entry)
 
-    return render_to_response('manager/edit_dyndns.html', {'domain': client.domain, 'client': client, 'records': records},
-                              context_instance=RequestContext(request))
+    return render(request, 'manager/edit_dyndns.html', {'domain': client.domain, 'client': client, 'records': records})
 
 
 @login_required
@@ -185,8 +180,7 @@ def edit_dyndns_secret(request, id):
         if entry.name == client.name:
             records.append(entry)
 
-    return render_to_response('manager/edit_dyndns.html', {'domain': client.domain, 'client': client, 'records': records, 'secret': new_secret, 'update_url': url},
-                              context_instance=RequestContext(request))
+    return render(request, 'manager/edit_dyndns.html', {'domain': client.domain, 'client': client, 'records': records, 'secret': new_secret, 'update_url': url})
 
 
 @login_required
@@ -213,12 +207,10 @@ def add_dyndns(request, name):
                 if request.is_secure():
                     url += "s"
                 url += "://%s%s" % (request.get_host(), reverse('api_update', args=(secret,)))
-                return render_to_response('manager/edit_dyndns.html', {'client': client,
+                return render(request, 'manager/edit_dyndns.html', {'client': client,
                                                                    'secret': secret,
-                                                                   'update_url': url},
-                              context_instance=RequestContext(request))
-    return render_to_response('manager/add_dyndns.html', {'domain': domain, 'client': form},
-                              context_instance=RequestContext(request))
+                                                                   'update_url': url})
+    return render(request, 'manager/add_dyndns.html', {'domain': domain, 'client': form})
 
 
 @login_required
@@ -234,8 +226,7 @@ def delete_dyndns(request, id):
             delete_client(client)
             client.delete()
             return redirect('show_domain', client.domain.name)
-    return render_to_response('manager/delete_dyndns.html', {'client': client, 'form': form},
-                              context_instance=RequestContext(request))
+    return render(request, 'manager/delete_dyndns.html', {'client': client, 'form': form})
 
 
 
@@ -303,8 +294,7 @@ def add_static(request, domain):
                                        form.cleaned_data['name'].strip())
             except dnsutils.DNSRecordException as e:
                 messages.error(request, str(e))
-                return render_to_response('manager/add_static.html', response_data,
-                                          context_instance=RequestContext(request))
+                return render(request, 'manager/add_static.html', response_data)
 
             # Save data
             entry = form.save()
@@ -319,8 +309,7 @@ def add_static(request, domain):
 
             return redirect('show_domain', domain.name)
 
-    return render_to_response('manager/add_static.html', response_data,
-                              context_instance=RequestContext(request))
+    return render(request, 'manager/add_static.html', response_data)
 
 
 @login_required
@@ -357,16 +346,14 @@ def edit_static(request, domain, entry):
             response_data['form'] = form
             if form.cleaned_data['name'] != name:
                 messages.error(request, "To change entry name, delete old record and add a new one.")
-                return render_to_response('manager/add_static.html', response_data,
-                                          context_instance=RequestContext(request))
+                return render(request, 'manager/add_static.html', response_data)
 
             try:
                 dnsutils.validate_data(form.cleaned_data['type'], form.cleaned_data['data'],
                                        form.cleaned_data['name'])
             except dnsutils.DNSRecordException as e:
                 messages.error(request, str(e))
-                return render_to_response('manager/add_static.html', response_data,
-                                          context_instance=RequestContext(request))
+                return render(request, 'manager/add_static.html', response_data)
 
             entry = form.save()
 
@@ -392,8 +379,7 @@ def edit_static(request, domain, entry):
     else:
         response_data['form'] = StaticEntryForm(instance=instance)
 
-    return render_to_response('manager/add_static.html', response_data,
-                              context_instance=RequestContext(request))
+    return render(request, 'manager/add_static.html', response_data)
 
 
 @login_required
@@ -424,8 +410,7 @@ def delete_static(request, domain, entry):
             messages.success(request, "Successfully deleted entry %s %s %s %s" % (
                              instance.fqdn, instance.ttl, instance.type, instance.data))
             return redirect('show_domain', domain.name)
-    return render_to_response('manager/delete_static.html', {'domain': domain, 'entry': instance, 'form': form},
-                              context_instance=RequestContext(request))
+    return render(request, 'manager/delete_static.html', {'domain': domain, 'entry': instance, 'form': form})
 
 
 def synchronize(domain, force=False):
