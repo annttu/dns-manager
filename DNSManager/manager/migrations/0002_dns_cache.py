@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dnsentrycache',
             name='domain',
-            field=models.ForeignKey(to='manager.Domain'),
+            field=models.ForeignKey(to='manager.Domain', on_delete=models.CASCADE),
             preserve_default=True,
         ),
     ]
