@@ -1,0 +1,22 @@
+version: '3.7'
+
+services:
+  app:
+    image: dns-manager
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - '8000:8000'
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:11-alpine
+    volumes:
+      - pgsql-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=dnsmanager
+      - POSTGRES_USER=dnsmanager
+      - POSTGRES_DB=dnsmanager
+
+volumes:
+  pgsql-data:

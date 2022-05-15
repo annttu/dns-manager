@@ -21,7 +21,8 @@ Install packages etc.
     pip install -r requirements.txt
     cd DNSManager
     vi manager/settings.py
-    ./manage.py syncdb
+    ./manage.py makemigrations
+    ./manage.py migrate
     # Create admin account for yourself
     ./manage.py createsuperuser
 
@@ -35,6 +36,25 @@ Go to http://127.0.0.1:8000
 
 I strongly recommend to setup a reverse proxy with a SSL-support for
 connections over Internet. Nginx or Apache is fine for this.
+
+Docker
+======
+
+Build the image locally
+
+    docker build . -t dns-manager
+
+Initialize the database and create a super user account.
+
+    docker-compose run app manage.py makemigrations
+    docker-compose run app manage.py migrate
+    docker-compose run app manage.py createsuperuser
+
+Run the stack
+
+    docker-compose up -d
+
+Go to http://127.0.0.1:8000
 
 
 Zone config for Bind9
