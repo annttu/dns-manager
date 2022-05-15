@@ -16,6 +16,7 @@ import dns.edns
 import dns.zone
 import socket
 from dns.exception import DNSException, SyntaxError
+import ipaddress
 
 
 import logging
@@ -103,8 +104,17 @@ def parseName(Origin, Name):
         return Origin, Name
 
 
+def resolve_server_address(server):
+    try:
+        ipaddress.ip_address(server)
+        return server
+    except ValueError:
+        return socket.gethostbyname(server)
+
+
 def doUpdate(Server, key, keyAlgorithm, Origin, doPTR, Action, TTL, Type, client, target):
     # Get the hostname and the origin
+    Server = resolve_server_address(Server)
     TTL = dns.ttl.from_text(TTL)
     Origin, Name = parseName(Origin, client)
     # Validate and setup the Key
@@ -165,6 +175,7 @@ def axfr(Server, key, keyAlgorithm, Origin):
     :param Origin: domain
     :return: List of dns-records
     """
+    Server = resolve_server_address(Server)
     KeyRing = checkKey(key)
     keyAlgorithm = getAlgorithm(keyAlgorithm)
     zone = dns.zone.from_xfr(dns.query.xfr(Server, Origin, keyring=KeyRing, keyalgorithm=keyAlgorithm))
