@@ -15,7 +15,7 @@ urlpatterns = [
     re_path(r'^login/?$', manager.views.login_page, name='login'),
     re_path(r'^logout/?$', manager.views.login_page, name='logout'),
 
-    re_path(r'^user/password/?$', auth_views.PasswordChangeView, {'template_name': 'manager/user_password.html'}, name="change_password"),
+    re_path(r'^user/password/?$', auth_views.PasswordChangeView.as_view(), {'template_name': 'manager/user_password.html'}, name="change_password"),
     re_path(r'^user/password/changed/?$', manager.views.password_changed, name='password_change_done'),
 
     re_path(r'^domains/add/?$', manager.views.add_domain, name="add_domain"),
@@ -32,7 +32,7 @@ urlpatterns = [
     re_path(r'^dyndns/edit/(?P<id>[0-9]+)/secret$', manager.views.edit_dyndns_secret, name="edit_dyndns_secret"),
     re_path(r'^dyndns/add/(?P<name>[a-zA-Z0-9\.\-]+)$', manager.views.add_dyndns, name="add_dyndns"),
     re_path(r'^api/update/(?P<secret>[a-zA-Z0-9]+)$', manager.views.update, name="api_update"),
-    re_path(r'^user/reset_password/', include('password_reset.urls')),
+    # re_path(r'^user/reset_password/', include('password_reset.urls')),
     path('admin/', admin.site.urls),
 
 
