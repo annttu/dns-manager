@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: db
+    restart: always
+    environment:
+      POSTGRES_USER: dnsmanager
+      POSTGRES_PASSWORD: dnsmanager
+      POSTGRES_DB: dnsmanager
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+    container_name: dnsmanager
+    restart: on-failure
+    depends_on:
+      - db
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: dnsmanager
+      DATABASE_USER: dnsmanager
+      DATABASE_PASSWORD: dnsmanager
+    ports:
+      - "8080:8080"
+
+volumes:
+  db_data:
