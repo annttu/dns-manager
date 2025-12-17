@@ -10,6 +10,8 @@ https://docs.djangoproject.com/en/1.7/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from DNSManager.utils import strtobool
+
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
@@ -20,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SECRET_KEY = 'llddl(iv^3+_**^4%k(98-)30_7^l6#(-tqc9m@lxe7p6og8c2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = strtobool(os.environ.get('DEBUG', False))
 
 TEMPLATE_DEBUG = True
 

@@ -13,4 +13,6 @@ COPY entrypoint.sh /app/entrypoint.sh
 
 USER nobody
 
+ENV PYTHONPATH=/app
+
 ENTRYPOINT ["/app/entrypoint.sh"]

@@ -1,5 +1,4 @@
-version: "3.9"
-
+---
 services:
   db:
     image: postgres:16
@@ -9,8 +8,6 @@ services:
       POSTGRES_USER: dnsmanager
       POSTGRES_PASSWORD: dnsmanager
       POSTGRES_DB: dnsmanager
-    ports:
-      - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
 
@@ -27,8 +24,9 @@ services:
       DATABASE_NAME: dnsmanager
       DATABASE_USER: dnsmanager
       DATABASE_PASSWORD: dnsmanager
+      DEBUG: true
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
 
 volumes:
   db_data:

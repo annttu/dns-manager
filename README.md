@@ -1,10 +1,12 @@
 DNSManager
 ==========
 
-DNSManager uses TSIG-key to add, update and delete DNS-records. DNSmanager works with all DNS-servers which support Dynamic updates [(RFC2136)](http://tools.ietf.org/html/rfc2136) using secure transport [(RFC3007)](http://tools.ietf.org/html/rfc3007). For example Bind9 and PowerDNS are supported.
+DNSManager uses TSIG-key to add, update and delete DNS-records. DNSManager works with all DNS-servers that 
+upport Dynamic updates [(RFC2136)](http://tools.ietf.org/html/rfc2136) using secure transport [(RFC3007)](http://tools.ietf.org/html/rfc3007). 
+For example Bind9 and PowerDNS are supported.
 
 
-Installation
+Installation locally
 ============
 
 Prerequisites
@@ -21,19 +23,44 @@ Install packages etc.
     pip install -r requirements.txt
     cd DNSManager
     vi manager/settings.py
-    ./manage.py syncdb
+    ./manage.py migrate
     # Create admin account for yourself
     ./manage.py createsuperuser
 
 
+Setup
+====
+
+Setup superuser
+
+```
+./manage.py createsuperuser
+```
+
+With container setup, run this command after containers are started.    
+
 Usage
 =====
 
-    ./manage.py runserver
+Locally
 
-Go to http://127.0.0.1:8000
+```
+./manage.py runserver 8080
+```
 
-I strongly recommend to setup a reverse proxy with a SSL-support for
+With Docker compose
+
+```
+docker compose build
+docker compose up
+```
+
+Connecting
+===
+
+Go to http://127.0.0.1:8080
+
+I strongly recommend to configure a reverse proxy with an SSL-support for
 connections over Internet. Nginx or Apache is fine for this.
 
 
@@ -47,16 +74,16 @@ Create first TSIG-key.
     dnssec-keygen -a HMAC-SHA256 -b 256 -n HOST domain.tld.tsigkey
     cat domain.tld.tsigkey.*.key
 
-Copy the bas64 encoded key and use to replace secret in <b>key</b> row below. Full row is also needed later when domain is added to the frontend.
+Copy the base64 encoded key and use it to replace the secret in <b>key</b> row below. The Full row is also needed later when a domain is added to the frontend.
 
-Update zone config with following
+Update zone config with the following configuration
 
     key "domain.tld.tsigkey." { algorithm hmac-sha256; secret "XC+/XU45WGC6ycCT9uORuqs+cPWqoyMl98F63Cw2czo="; };
     zone "domain.tld" { type master; file "/etc/bind/domain.tld"; allow-transfer { my-master-server-here; key "domain.tld.tsigkey."; }; allow-update { key "domain.tld.tsigkey."; }; };
 
-Note to use exactly same name for key in config than in dnssec-keygen command. Otherwise it does not work.
+Note to use exactly same name for the key in config than in dnssec-keygen command. Otherwise it does not work.
 
-Finally reload config
+Finally, reload config
 
     rndc reload
 
@@ -65,7 +92,7 @@ License
 
 The MIT License (MIT)
 
-Copyright (c) 2015 Antti Jaakkola
+Copyright (c) 2015-2025 Antti Jaakkola
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
