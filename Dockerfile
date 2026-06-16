@@ -1,4 +1,4 @@
-FROM docker.io/python:3.13-alpine AS dnsmanager
+FROM docker.io/python:3.14-alpine AS dnsmanager
 
 RUN mkdir /app
 
