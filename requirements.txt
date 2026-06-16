@@ -3,3 +3,4 @@ dnspython>=2.7.0
 psycopg2-binary==2.9.11
 djangorestframework>=3.16.0
 gunicorn>=23.0
+whitenoise==6.12.0

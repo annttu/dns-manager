@@ -1,0 +1,14 @@
+SECRET_KEY = 'replaceme'
+
+ALLOWED_HOSTS = ["example.com']
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'dnsmanager',
+        'USER': 'dnsmanager',
+        'PASSWORD': 'replaceme',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
+    }
+}

@@ -1,32 +1,31 @@
 ---
 services:
-  db:
-    image: postgres:16
-    container_name: db
+  dns-manager-db:
+    image: docker.io/library/postgres:18
+    container_name: dns-manager-db
     restart: always
     environment:
       POSTGRES_USER: dnsmanager
       POSTGRES_PASSWORD: dnsmanager
       POSTGRES_DB: dnsmanager
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - dns_manager_db_data:/var/lib/postgresql
 
-  app:
-    build:
-      context: .
-    container_name: dnsmanager
+  dns-manager-app:
+    image: ghcr.io/annttu/dns-manager:latest
+    container_name: dns-manager-app
     restart: on-failure
     depends_on:
-      - db
+      - dns-manager-db
     environment:
-      DATABASE_HOST: db
+      DATABASE_HOST: dns-manager-db
       DATABASE_PORT: 5432
       DATABASE_NAME: dnsmanager
       DATABASE_USER: dnsmanager
       DATABASE_PASSWORD: dnsmanager
-      DEBUG: true
+      ALLOWED_HOSTS: localhost,example.com
     ports:
       - "127.0.0.1:8080:8080"
 
 volumes:
-  db_data:
+  dns_manager_db_data:

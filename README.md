@@ -1,10 +1,29 @@
 DNSManager
 ==========
 
+Web DNS record manager with DynDNS support.
+
 DNSManager uses TSIG-key to add, update and delete DNS-records. DNSManager works with all DNS-servers that 
-upport Dynamic updates [(RFC2136)](http://tools.ietf.org/html/rfc2136) using secure transport [(RFC3007)](http://tools.ietf.org/html/rfc3007). 
+support Dynamic updates [(RFC2136)](http://tools.ietf.org/html/rfc2136) using secure transport [(RFC3007)](http://tools.ietf.org/html/rfc3007).
 For example Bind9 and PowerDNS are supported.
 
+
+Container installation
+=======
+
+Copy [docker-compose.yaml](https://github.com/annttu/dns-manager/blob/master/docker-compose.yaml) file. Edit passwords and ports if needed.
+
+Start containers
+
+```
+docker compose up
+```
+
+Create superuser
+
+```
+docker exec --it dns-manager-app ./manage.py createsuperuser
+```
 
 Installation locally
 ============
@@ -18,18 +37,16 @@ Prerequisites
 
 Install packages etc.
 
-    virtualenv env --python=python3.4
-    . env/bin/activate
-    pip install -r requirements.txt
-    cd DNSManager
-    vi manager/settings.py
-    ./manage.py migrate
-    # Create admin account for yourself
-    ./manage.py createsuperuser
-
-
-Setup
-====
+```
+python3 -m venv venv
+. venv/bin/activate
+pip install -r requirements.txt
+cd DNSManager
+cp local_settings.py.sample local_settings.py
+vim local_settings.py
+./manage.py migrate
+./manage.py collectstatic
+```
 
 Setup superuser
 
@@ -37,22 +54,16 @@ Setup superuser
 ./manage.py createsuperuser
 ```
 
-With container setup, run this command after containers are started.    
-
-Usage
-=====
-
-Locally
+Start server with manage.py runserver or gunicorn
 
 ```
 ./manage.py runserver 8080
 ```
 
-With Docker compose
+or
 
 ```
-docker compose build
-docker compose up
+gunicorn gunicorn manager.wsgi:application --workers 4 --bind :8080
 ```
 
 Connecting
@@ -92,7 +103,7 @@ License
 
 The MIT License (MIT)
 
-Copyright (c) 2015-2025 Antti Jaakkola
+Copyright (c) 2015-2026 Antti Jaakkola
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

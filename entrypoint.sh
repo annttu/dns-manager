@@ -5,4 +5,5 @@ cd /app/DNSManager
 ./manage.py migrate
 
 # Run server
-exec ./manage.py runserver 0.0.0.0:8080
+export HOME=/app
+exec gunicorn manager.wsgi:application --workers 4 --bind 0.0.0.0:8080

@@ -10,9 +10,16 @@ RUN pip3 install --no-cache-dir -r /app/requirements.txt
 
 COPY DNSManager /app/DNSManager
 COPY entrypoint.sh /app/entrypoint.sh
+RUN mkdir /app/DNSManager/staticfiles/ /app/.gunicorn
+RUN chown nobody: /app/.gunicorn
+
+WORKDIR /app/DNSManager
+ENV PYTHONPATH=/app
+
+RUN ./manage.py collectstatic
 
 USER nobody
 
-ENV PYTHONPATH=/app
+EXPOSE 8080
 
 ENTRYPOINT ["/app/entrypoint.sh"]
