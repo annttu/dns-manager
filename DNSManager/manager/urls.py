@@ -7,9 +7,6 @@ import manager.views
 from manager import views as manager_views
 
 
-admin.autodiscover()
-
-
 urlpatterns = [
     path('', manager.views.index, name='index'),
     re_path(r'^login/?$', manager.views.login_page, name='login'),

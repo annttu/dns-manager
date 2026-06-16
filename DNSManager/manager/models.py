@@ -84,7 +84,9 @@ class Client(models.Model):
     comment = models.CharField(max_length=8192, null=False, default="")
 
     class Meta:
-        unique_together = ('domain', 'name',)
+        constraints = [
+            models.UniqueConstraint(fields=['domain', 'name'], name='unique_domain_name'),
+        ]
 
     @property
     def fqdn(self):
@@ -118,7 +120,7 @@ class DNSEntryCache(models.Model):
     record_class = models.CharField(max_length=128, null=False, default="IN", blank=False)
     type = models.CharField(max_length=128, null=False, blank=False)
     data = models.CharField(max_length=8192, null=False, blank=False)
-    timestamp = models.DateTimeField(auto_now_add=True, auto_created=True, null=False)
+    timestamp = models.DateTimeField(auto_now_add=True, null=False)
 
     @property
     def fqdn(self):
